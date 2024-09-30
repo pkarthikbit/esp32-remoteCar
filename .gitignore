@@ -1,2 +1,2 @@
-esp-idf/build/*
-esp-idf/sdkconfig
+build/*
+sdkconfig
