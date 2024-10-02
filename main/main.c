@@ -25,13 +25,14 @@ static void blink_task(void *pvParameter)
     /* Set the GPIO as a push/pull output */
     gpio_set_direction(BLINK_GPIO, GPIO_MODE_OUTPUT);
 
-    /* Blink off (output low) */
-    gpio_set_level(BLINK_GPIO, 0);
-    vTaskDelay(500 / portTICK_PERIOD_MS);
-    /* Blink on (output high) */
-    gpio_set_level(BLINK_GPIO, 1);
-    vTaskDelay(500 / portTICK_PERIOD_MS);
-
+    while(
+        /* Blink off (output low) */
+        gpio_set_level(BLINK_GPIO, 0);
+        vTaskDelay(500 / portTICK_PERIOD_MS);
+        /* Blink on (output high) */
+        gpio_set_level(BLINK_GPIO, 1);
+        vTaskDelay(500 / portTICK_PERIOD_MS);
+    )
 }
 
 void app_main(void)
