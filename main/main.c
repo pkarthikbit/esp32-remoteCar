@@ -88,7 +88,7 @@ void esp32_remotecar_1000ms()
         gpio_set_level(BLINK_GPIO, 0);
     }
 
-    led_st = false
+    led_st = false;
 }
 
 /* Main function */
@@ -99,7 +99,7 @@ void app_main(void)
     /* List 1000 ms periodic functions under this */
     if(xTaskCheckForTimeOut(&x_timeout, &openTimeout) == pdTRUE)
     {
-        esp32_remotecar_1000ms()
+        esp32_remotecar_1000ms();
         openTimeout = TIME_1000MS; /*reload the var*/
     }
 }
