@@ -23,6 +23,12 @@ static const char *TAG = "example";
 #define BLINK_GPIO GPIO_NUM_15
 
 /* Funciton declaration */
+IRAM_ATTR static bool temp_sensor_monitor_cbs(temperature_sensor_handle_t tsens, const temperature_sensor_threshold_event_data_t *edata, void *user_data)
+{
+    ESP_DRAM_LOGI("tsens", "Temperature value is higher or lower than threshold, value is %d\n...\n\n", edata->celsius_value);
+    return false;
+}
+
 static void blink_task(void *pvParameter)
 {
     /* Configure the IOMUX register for pad BLINK_GPIO (some pads are
@@ -52,6 +58,20 @@ static void Tsensor_task(void *pvParameter)
     temperature_sensor_handle_t temp_sensor = NULL;
     temperature_sensor_config_t temp_sensor_config = TEMPERATURE_SENSOR_CONFIG_DEFAULT(10, 50);
     ESP_ERROR_CHECK(temperature_sensor_install(&temp_sensor_config, &temp_sensor));
+
+    temperature_sensor_event_callbacks_t cbs = {
+        .on_threshold = temp_sensor_monitor_cbs,
+    };
+
+    temperature_sensor_abs_threshold_config_t threshold_cfg = {
+    .high_threshold = 50,
+    .low_threshold = -10,
+    };
+
+    ESP_ERROR_CHECK(temperature_sensor_set_absolute_threshold(temp_sensor, &threshold_cfg));
+
+    ESP_ERROR_CHECK(temperature_sensor_register_callbacks(temp_sensor, &cbs, NULL));
+
 
     ESP_LOGI(TAG, "Enable temperature sensor");
     ESP_ERROR_CHECK(temperature_sensor_enable(temp_sensor));
