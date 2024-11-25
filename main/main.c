@@ -71,5 +71,5 @@ void app_main(void)
 {
     printf("Hello world!\n");
     xTaskCreate(&blink_task, "blink_task", 2048, NULL, 5, NULL); 
-    xTaskCreate(&blink_task, "Tsensor_task", 2048, NULL, 5, NULL); 
+    xTaskCreate(&Tsensor_task, "Tsensor_task", 2048, NULL, 5, NULL); 
 }
