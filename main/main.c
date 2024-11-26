@@ -3,10 +3,6 @@
  *
  * SPDX-License-Identifier: CC0-1.0
  */
-
-#include <stdio.h>
-#include <inttypes.h>
-#include "sdkconfig.h"
 /* inclusion - RTOS related */
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -101,5 +97,4 @@ void app_main(void)
     vTaskStartScheduler();
 
     /* Will not reach here. */
-    return 0;
 }
