@@ -21,7 +21,7 @@ static const char *TAG = "esp32-remoteCar";     /* for module name logging */
 temperature_sensor_handle_t temp_sensor = NULL;
 temperature_sensor_config_t temp_sensor_config = TEMPERATURE_SENSOR_CONFIG_DEFAULT(10, 50);
 
-static void esp32_remotecar_init(void *pvParameter)
+static void esp32_remotecar_init()
 {
     /* Configure the IOMUX register for pad BLINK_GPIO (some pads are
     muxed to GPIO on reset already, but some default to other
@@ -65,7 +65,7 @@ static void esp32_remotecar_1000ms(void *pvParameter)
 /* Main function */
 void app_main(void)
 {
-    xTaskCreate(&esp32_remotecar_init, "init task", 2048, NULL, 5, NULL); 
+    esp32_remotecar_init();
 
     xTaskCreate(&esp32_remotecar_1000ms, "1000ms task", 2048, NULL, 5, NULL); 
 
