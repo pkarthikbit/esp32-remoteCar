@@ -19,16 +19,6 @@
 static const char *TAG = "esp32-remoteCar";     /* for module name logging */
 temperature_sensor_handle_t temp_sensor = NULL;
 temperature_sensor_config_t temp_sensor_config = TEMPERATURE_SENSOR_CONFIG_DEFAULT(10, 50);
-float tsens_value;
-bool led_st;
-
-/* Funciton declaration */
-IRAM_ATTR static bool temp_sensor_monitor_cbs(temperature_sensor_handle_t tsens, const temperature_sensor_threshold_event_data_t *edata, void *user_data)
-{
-    ESP_DRAM_LOGI(TAG, "Temperature value is higher or lower than threshold, value is %d\n...\n\n", edata->celsius_value);
-    led_st = true;
-    return false;
-}
 
 static void esp32_remotecar_init(void *pvParameter)
 {
@@ -44,20 +34,6 @@ static void esp32_remotecar_init(void *pvParameter)
     gpio_set_direction(BLINK_GPIO, GPIO_MODE_OUTPUT);
 
     ESP_ERROR_CHECK(temperature_sensor_install(&temp_sensor_config, &temp_sensor));
-
-    temperature_sensor_event_callbacks_t cbs = {
-    .on_threshold = temp_sensor_monitor_cbs,
-    };
-
-    temperature_sensor_abs_threshold_config_t threshold_cfg = {
-    .high_threshold = 20,
-    .low_threshold = 16,
-    };
-
-    ESP_ERROR_CHECK(temperature_sensor_set_absolute_threshold(temp_sensor, &threshold_cfg));
-
-    ESP_ERROR_CHECK(temperature_sensor_register_callbacks(temp_sensor, &cbs, NULL));
-
     /* Enable temperature sensor */ 
     ESP_ERROR_CHECK(temperature_sensor_enable(temp_sensor));
 }
@@ -69,7 +45,8 @@ void esp32_remotecar_1000ms()
         ESP_ERROR_CHECK(temperature_sensor_get_celsius(temp_sensor, &tsens_value));
         ESP_LOGI(TAG, "Temperature value %.02f ℃", tsens_value);
 
-        if (led_st)
+        /* Turn on LED based on the temp */
+        if (tsens_value > 12)
         {
             /* LED on (output high) */
             gpio_set_level(BLINK_GPIO, 1);
@@ -79,8 +56,6 @@ void esp32_remotecar_1000ms()
             /* LED off (output low) */
             gpio_set_level(BLINK_GPIO, 0);
         }
-
-        led_st = false;
 
         vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
