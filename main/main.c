@@ -39,7 +39,7 @@ static void esp32_remotecar_init(void *pvParameter)
     ESP_ERROR_CHECK(temperature_sensor_enable(temp_sensor));
 }
 
-void esp32_remotecar_1000ms()
+static void esp32_remotecar_1000ms(void *pvParameter)
 {
     while(1)
     {
@@ -68,9 +68,6 @@ void app_main(void)
     xTaskCreate(&esp32_remotecar_init, "init task", 2048, NULL, 5, NULL); 
 
     xTaskCreate(&esp32_remotecar_1000ms, "1000ms task", 2048, NULL, 5, NULL); 
-
-    /* Start the scheduler so the tasks start executing. */
-    vTaskStartScheduler();
 
     /* Will not reach here. */
 }
