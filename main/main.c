@@ -17,13 +17,10 @@
 #include "driver/temperature_sensor.h"
 
 /* constant definition */
-#define BLINK_GPIO  GPIO_NUM_15
-#define TIME_1000MS 1000u        
+#define BLINK_GPIO  GPIO_NUM_15     
 
 /* Variable definition */
 static const char *TAG = "esp32-remoteCar";     /* for module name logging */
-TimeOut_t x_timeout;                         /* for time out function */
-TickType_t openTimeout;                       /* for time out funciton */
 temperature_sensor_handle_t temp_sensor = NULL;
 temperature_sensor_config_t temp_sensor_config = TEMPERATURE_SENSOR_CONFIG_DEFAULT(10, 50);
 float tsens_value;
@@ -50,9 +47,6 @@ static void esp32_remotecar_init(void *pvParameter)
     /* Set the GPIO as a push/pull output */
     gpio_set_direction(BLINK_GPIO, GPIO_MODE_OUTPUT);
 
-    vTaskSetTimeOutState(&x_timeout);
-    openTimeout = TIME_1000MS; /*ms*/
-
     ESP_ERROR_CHECK(temperature_sensor_install(&temp_sensor_config, &temp_sensor));
 
     temperature_sensor_event_callbacks_t cbs = {
@@ -74,21 +68,26 @@ static void esp32_remotecar_init(void *pvParameter)
 
 void esp32_remotecar_1000ms()
 {
-    ESP_ERROR_CHECK(temperature_sensor_get_celsius(temp_sensor, &tsens_value));
-    ESP_LOGI(TAG, "Temperature value %.02f ℃", tsens_value);
-
-    if (led_st)
+    while(1)
     {
-        /* LED on (output high) */
-        gpio_set_level(BLINK_GPIO, 1);
-    }
-    else
-    {
-        /* LED off (output low) */
-        gpio_set_level(BLINK_GPIO, 0);
-    }
+        ESP_ERROR_CHECK(temperature_sensor_get_celsius(temp_sensor, &tsens_value));
+        ESP_LOGI(TAG, "Temperature value %.02f ℃", tsens_value);
 
-    led_st = false;
+        if (led_st)
+        {
+            /* LED on (output high) */
+            gpio_set_level(BLINK_GPIO, 1);
+        }
+        else
+        {
+            /* LED off (output low) */
+            gpio_set_level(BLINK_GPIO, 0);
+        }
+
+        led_st = false;
+
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+    }
 }
 
 /* Main function */
@@ -96,10 +95,11 @@ void app_main(void)
 {
     xTaskCreate(&esp32_remotecar_init, "init task", 2048, NULL, 5, NULL); 
 
-    /* List 1000 ms periodic functions under this */
-    if(xTaskCheckForTimeOut(&x_timeout, &openTimeout) == pdTRUE)
-    {
-        esp32_remotecar_1000ms();
-        openTimeout = TIME_1000MS; /*reload the var*/
-    }
+    xTaskCreate(&esp32_remotecar_1000ms, "1000ms task", 2048, NULL, 5, NULL); 
+
+    /* Start the scheduler so the tasks start executing. */
+    vTaskStartScheduler();
+
+    /* Will not reach here. */
+    return 0;
 }
