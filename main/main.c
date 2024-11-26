@@ -16,6 +16,7 @@
 #define BLINK_GPIO  GPIO_NUM_15     
 
 /* Variable definition */
+float tsens_value;
 static const char *TAG = "esp32-remoteCar";     /* for module name logging */
 temperature_sensor_handle_t temp_sensor = NULL;
 temperature_sensor_config_t temp_sensor_config = TEMPERATURE_SENSOR_CONFIG_DEFAULT(10, 50);
