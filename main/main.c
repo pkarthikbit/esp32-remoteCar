@@ -22,8 +22,8 @@
 
 /* Variable definition */
 static const char *TAG = "esp32-remoteCar";     /* for module name logging */
-xTimeOutType x_timeout;                         /* for time out function */
-portTickType openTimeout;                       /* for time out funciton */
+TimeOut_t x_timeout;                         /* for time out function */
+TickType_t openTimeout;                       /* for time out funciton */
 temperature_sensor_handle_t temp_sensor = NULL;
 temperature_sensor_config_t temp_sensor_config = TEMPERATURE_SENSOR_CONFIG_DEFAULT(10, 50);
 float tsens_value;
