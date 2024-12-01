@@ -526,6 +526,11 @@ static void esp32_remotecar_1000ms(void *pvParameter)
     }
 
     vTaskDelay(1000 / portTICK_PERIOD_MS);
+
+    while(1)
+    {
+        /* do nothing */
+    }
 }
 
 /* Main function */
