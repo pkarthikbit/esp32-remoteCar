@@ -19,6 +19,7 @@
 #include "esp_gap_bt_api.h"
 #include "esp_bt_device.h"
 #include "esp_spp_api.h"
+#include "sdkconfig.h"
 
 #include "time.h"
 #include "sys/time.h"
