@@ -14,6 +14,7 @@
 #include "driver/temperature_sensor.h"
 #include "driver/uart.h"
 /* Nimble includes */
+#include "common.h"
 #include "gap.h"
 
 /* constant definition */
@@ -31,7 +32,6 @@ static void nimble_host_task(void *param);
 
 /* Variable definition */
 float tsens_value;
-static const char *TAG = "esp32-remoteCar";     /* for module name logging */
 temperature_sensor_handle_t temp_sensor = NULL;
 temperature_sensor_config_t temp_sensor_config = TEMPERATURE_SENSOR_CONFIG_DEFAULT(10, 50);
 
