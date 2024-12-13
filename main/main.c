@@ -75,7 +75,7 @@ static void esp32_remotecar_1000ms(void *pvParameter)
         //ESP_LOGI(TAG, "Temperature value %.02f ℃", tsens_value);
 
         /* Turn on LED based on the temp */
-        if (tsens_value > 30)
+        if (tsens_value > 40)
         {
             /* LED on (output low) */
             gpio_set_level(BLINK_GPIO, 0);
