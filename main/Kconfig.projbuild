@@ -17,7 +17,7 @@ menu "Example Configuration"
 
     config EXAMPLE_IPV4_ADDR
         string "IPV4 Address"
-        default "192.0.0.4"
+        default "192.168.103.80"
         depends on EXAMPLE_IPV4
         help
             IPV4 address to which the client example will send data.
