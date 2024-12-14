@@ -26,19 +26,7 @@
 
 /* constant definition */
 #define BLINK_GPIO  GPIO_NUM_15     
-#define PEER_ADDR_VAL_SIZE      6
 
-#ifdef CONFIG_EXAMPLE_SOCKET_IP_INPUT_STDIN
-#include "addr_from_stdin.h"
-#endif
-
-#if defined(CONFIG_EXAMPLE_IPV4)
-#define HOST_IP_ADDR CONFIG_EXAMPLE_IPV4_ADDR
-#elif defined(CONFIG_EXAMPLE_IPV6)
-#define HOST_IP_ADDR CONFIG_EXAMPLE_IPV6_ADDR
-#else
-#define HOST_IP_ADDR ""
-#endif
 
 #define PORT CONFIG_EXAMPLE_PORT
 
