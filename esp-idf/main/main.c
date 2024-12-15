@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2021-2024 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: 2021-2022 Espressif Systems (Shanghai) CO LTD
  *
  * SPDX-License-Identifier: Unlicense OR CC0-1.0
  */
@@ -13,236 +13,121 @@
 #include "host/util/util.h"
 #include "console/console.h"
 #include "services/gap/ble_svc_gap.h"
-#include "ble_spp_client.h"
+#include "services/gatt/ble_svc_gatt.h"
+#include "ble_spp_server.h"
 #include "driver/uart.h"
 
-#define PEER_ADDR_VAL_SIZE      6
-
-static const char *tag = "NimBLE_SPP_BLE_CENT";
-static int ble_spp_client_gap_event(struct ble_gap_event *event, void *arg);
+static int ble_spp_server_gap_event(struct ble_gap_event *event, void *arg);
+static uint8_t own_addr_type;
+int gatt_svr_register(void);
 QueueHandle_t spp_common_uart_queue = NULL;
+static bool conn_handle_subs[CONFIG_BT_NIMBLE_MAX_CONNECTIONS + 1];
+static uint16_t ble_spp_svc_gatt_read_val_handle;
+
 void ble_store_config_init(void);
-uint16_t attribute_handle[CONFIG_BT_NIMBLE_MAX_CONNECTIONS + 1];
-static void ble_spp_client_scan(void);
-static ble_addr_t connected_addr[CONFIG_BT_NIMBLE_MAX_CONNECTIONS + 1];
-
-static void ble_spp_client_write_subscribe(const struct peer *peer)
-{
-  uint8_t value[2];
-  int rc;
-  const struct peer_dsc *dsc;
-
-  /* Subscribe to notifications for the SPP characteristic.
-   * A central enables notifications by writing two bytes (1, 0) to the
-   * characteristic's client-characteristic-configuration-descriptor (CCCD).
-   */
-  dsc = peer_dsc_find_uuid(peer,
-                    BLE_UUID16_DECLARE(GATT_SPP_SVC_UUID),
-                    BLE_UUID16_DECLARE(GATT_SPP_CHR_UUID),
-                    BLE_UUID16_DECLARE(BLE_GATT_DSC_CLT_CFG_UUID16));
-  if (dsc == NULL) {
-     MODLOG_DFLT(ERROR, "Error: Peer lacks a CCCD for the Unread Alert "
-                       "Status characteristic\n");
-    goto err;
-  }
-
-  value[0] = 1;
-  value[1] = 0;
-  rc = ble_gattc_write_flat(peer->conn_handle, dsc->dsc.handle,
-                          value, sizeof value, NULL, NULL);
-
-  if (rc != 0) {
-     MODLOG_DFLT(ERROR, "Error: Failed to subscribe to characteristic; "
-                       "rc=%d\n", rc);
-    goto err;
-  }
-  return;
-  err:
-    /* Terminate the connection. */
-    ble_gap_terminate(peer->conn_handle, BLE_ERR_REM_USER_CONN_TERM);
-
-}
-
-static void
-ble_spp_client_set_handle(const struct peer *peer)
-{
-    const struct peer_chr *chr;
-    chr = peer_chr_find_uuid(peer,
-                             BLE_UUID16_DECLARE(GATT_SPP_SVC_UUID),
-                             BLE_UUID16_DECLARE(GATT_SPP_CHR_UUID));
-    attribute_handle[peer->conn_handle] = chr->chr.val_handle;
-
-}
-
 
 /**
- * Called when service discovery of the specified peer has completed.
+ * Logs information about a connection to the console.
  */
 static void
-ble_spp_client_on_disc_complete(const struct peer *peer, int status, void *arg)
+ble_spp_server_print_conn_desc(struct ble_gap_conn_desc *desc)
 {
-    if (status != 0) {
-        /* Service discovery failed.  Terminate the connection. */
-        MODLOG_DFLT(ERROR, "Error: Service discovery failed; status=%d "
-                    "conn_handle=%d\n", status, peer->conn_handle);
-        ble_gap_terminate(peer->conn_handle, BLE_ERR_REM_USER_CONN_TERM);
-        return;
-    }
-
-    /* Service discovery has completed successfully.  Now we have a complete
-     * list of services, characteristics, and descriptors that the peer
-     * supports.
-     */
-    MODLOG_DFLT(INFO, "Service discovery complete; status=%d "
-                "conn_handle=%d\n", status, peer->conn_handle);
-
-    ble_spp_client_set_handle(peer);
-    ble_spp_client_write_subscribe(peer);
-
-#if CONFIG_BT_NIMBLE_MAX_CONNECTIONS > 1
-    ble_spp_client_scan();
-#endif
+    MODLOG_DFLT(INFO, "handle=%d our_ota_addr_type=%d our_ota_addr=",
+                desc->conn_handle, desc->our_ota_addr.type);
+    print_addr(desc->our_ota_addr.val);
+    MODLOG_DFLT(INFO, " our_id_addr_type=%d our_id_addr=",
+                desc->our_id_addr.type);
+    print_addr(desc->our_id_addr.val);
+    MODLOG_DFLT(INFO, " peer_ota_addr_type=%d peer_ota_addr=",
+                desc->peer_ota_addr.type);
+    print_addr(desc->peer_ota_addr.val);
+    MODLOG_DFLT(INFO, " peer_id_addr_type=%d peer_id_addr=",
+                desc->peer_id_addr.type);
+    print_addr(desc->peer_id_addr.val);
+    MODLOG_DFLT(INFO, " conn_itvl=%d conn_latency=%d supervision_timeout=%d "
+                "encrypted=%d authenticated=%d bonded=%d\n",
+                desc->conn_itvl, desc->conn_latency,
+                desc->supervision_timeout,
+                desc->sec_state.encrypted,
+                desc->sec_state.authenticated,
+                desc->sec_state.bonded);
 }
 
 /**
- * Initiates the GAP general discovery procedure.
+ * Enables advertising with the following parameters:
+ *     o General discoverable mode.
+ *     o Undirected connectable mode.
  */
 static void
-ble_spp_client_scan(void)
+ble_spp_server_advertise(void)
 {
-    uint8_t own_addr_type;
-    struct ble_gap_disc_params disc_params;
+    struct ble_gap_adv_params adv_params;
+    struct ble_hs_adv_fields fields;
+    const char *name;
     int rc;
-
-    /* Figure out address to use while advertising (no privacy for now) */
-    rc = ble_hs_id_infer_auto(0, &own_addr_type);
-    if (rc != 0) {
-        MODLOG_DFLT(ERROR, "error determining address type; rc=%d\n", rc);
-        return;
-    }
-
-    /* Tell the controller to filter duplicates; we don't want to process
-     * repeated advertisements from the same device.
-     */
-    disc_params.filter_duplicates = 1;
 
     /**
-     * Perform a passive scan.  I.e., don't send follow-up scan requests to
-     * each advertiser.
+     *  Set the advertisement data included in our advertisements:
+     *     o Flags (indicates advertisement type and other general info).
+     *     o Advertising tx power.
+     *     o Device name.
+     *     o 16-bit service UUIDs (alert notifications).
      */
-    disc_params.passive = 1;
 
-    /* Use defaults for the rest of the parameters. */
-    disc_params.itvl = 0;
-    disc_params.window = 0;
-    disc_params.filter_policy = 0;
-    disc_params.limited = 0;
+    memset(&fields, 0, sizeof fields);
 
-    rc = ble_gap_disc(own_addr_type, BLE_HS_FOREVER, &disc_params,
-                      ble_spp_client_gap_event, NULL);
-    if (rc != 0) {
-        MODLOG_DFLT(ERROR, "Error initiating GAP discovery procedure; rc=%d\n",
-                    rc);
-    }
-}
-
-/**
- * Indicates whether we should try to connect to the sender of the specified
- * advertisement.  The function returns a positive result if the device
- * advertises connectability and support for the Alert Notification service.
- */
-static int
-ble_spp_client_should_connect(const struct ble_gap_disc_desc *disc)
-{
-    struct ble_hs_adv_fields fields;
-    int rc;
-    int i;
-
-    /* Check if device is already connected or not */
-    for ( i = 0; i <= CONFIG_BT_NIMBLE_MAX_CONNECTIONS; i++) {
-        if (memcmp(&connected_addr[i].val, disc->addr.val, PEER_ADDR_VAL_SIZE) == 0) {
-            MODLOG_DFLT(DEBUG, "Device already connected");
-            return 0;
-        }
-    }
-
-    /* The device has to be advertising connectability. */
-    if (disc->event_type != BLE_HCI_ADV_RPT_EVTYPE_ADV_IND &&
-            disc->event_type != BLE_HCI_ADV_RPT_EVTYPE_DIR_IND) {
-
-        return 0;
-    }
-
-    rc = ble_hs_adv_parse_fields(&fields, disc->data, disc->length_data);
-    if (rc != 0) {
-        return 0;
-    }
-
-    /* The device has to advertise support for the SPP
-     * service (0xABF0).
+    /* Advertise two flags:
+     *     o Discoverability in forthcoming advertisement (general)
+     *     o BLE-only (BR/EDR unsupported).
      */
-    for (i = 0; i < fields.num_uuids16; i++) {
-        if (ble_uuid_u16(&fields.uuids16[i].u) == GATT_SPP_SVC_UUID) {
-            return 1;
-        }
-    }
-    return 0;
-}
+    fields.flags = BLE_HS_ADV_F_DISC_GEN |
+                   BLE_HS_ADV_F_BREDR_UNSUP;
 
-/**
- * Connects to the sender of the specified advertisement of it looks
- * interesting.  A device is "interesting" if it advertises connectability and
- * support for the Alert Notification service.
- */
-static void
-ble_spp_client_connect_if_interesting(const struct ble_gap_disc_desc *disc)
-{
-    uint8_t own_addr_type;
-    int rc;
+    /* Indicate that the TX power level field should be included; have the
+     * stack fill this value automatically.  This is done by assigning the
+     * special value BLE_HS_ADV_TX_PWR_LVL_AUTO.
+     */
+    fields.tx_pwr_lvl_is_present = 1;
+    fields.tx_pwr_lvl = BLE_HS_ADV_TX_PWR_LVL_AUTO;
 
-    /* Don't do anything if we don't care about this advertiser. */
-    if (!ble_spp_client_should_connect(disc)) {
+    name = ble_svc_gap_device_name();
+    fields.name = (uint8_t *)name;
+    fields.name_len = strlen(name);
+    fields.name_is_complete = 1;
+
+    fields.uuids16 = (ble_uuid16_t[]) {
+        BLE_UUID16_INIT(BLE_SVC_SPP_UUID16)
+    };
+    fields.num_uuids16 = 1;
+    fields.uuids16_is_complete = 1;
+
+    rc = ble_gap_adv_set_fields(&fields);
+    if (rc != 0) {
+        MODLOG_DFLT(ERROR, "error setting advertisement data; rc=%d\n", rc);
         return;
     }
 
-#if !(MYNEWT_VAL(BLE_HOST_ALLOW_CONNECT_WITH_SCAN))
-    /* Scanning must be stopped before a connection can be initiated. */
-    rc = ble_gap_disc_cancel();
+    /* Begin advertising. */
+    memset(&adv_params, 0, sizeof adv_params);
+    adv_params.conn_mode = BLE_GAP_CONN_MODE_UND;
+    adv_params.disc_mode = BLE_GAP_DISC_MODE_GEN;
+    rc = ble_gap_adv_start(own_addr_type, NULL, BLE_HS_FOREVER,
+                           &adv_params, ble_spp_server_gap_event, NULL);
     if (rc != 0) {
-        MODLOG_DFLT(DEBUG, "Failed to cancel scan; rc=%d\n", rc);
-        return;
-    }
-#endif
-
-    /* Figure out address to use for connect (no privacy for now) */
-    rc = ble_hs_id_infer_auto(0, &own_addr_type);
-    if (rc != 0) {
-        MODLOG_DFLT(ERROR, "error determining address type; rc=%d\n", rc);
-        return;
-    }
-
-    /* Try to connect the the advertiser.  Allow 30 seconds (30000 ms) for
-     * timeout.
-     */
-
-    rc = ble_gap_connect(own_addr_type, &disc->addr, 30000, NULL,
-                         ble_spp_client_gap_event, NULL);
-    if (rc != 0) {
-        MODLOG_DFLT(ERROR, "Error: Failed to connect to device; addr_type=%d "
-                    "addr=%s; rc=%d\n",
-                    disc->addr.type, addr_str(disc->addr.val), rc);
+        MODLOG_DFLT(ERROR, "error enabling advertisement; rc=%d\n", rc);
         return;
     }
 }
 
 /**
  * The nimble host executes this callback when a GAP event occurs.  The
- * application associates a GAP event callback with each connection that is
- * established.  ble_spp_client uses the same callback for all connections.
+ * application associates a GAP event callback with each connection that forms.
+ * ble_spp_server uses the same callback for all connections.
  *
- * @param event                 The event being signalled.
+ * @param event                 The type of event being signalled.
+ * @param ctxt                  Various information pertaining to the event.
  * @param arg                   Application-specified argument; unused by
- *                                  ble_spp_client.
+ *                                  ble_spp_server.
  *
  * @return                      0 if the application successfully handled the
  *                                  event; nonzero on failure.  The semantics
@@ -250,95 +135,54 @@ ble_spp_client_connect_if_interesting(const struct ble_gap_disc_desc *disc)
  *                                  particular GAP event being signalled.
  */
 static int
-ble_spp_client_gap_event(struct ble_gap_event *event, void *arg)
+ble_spp_server_gap_event(struct ble_gap_event *event, void *arg)
 {
     struct ble_gap_conn_desc desc;
-    struct ble_hs_adv_fields fields;
     int rc;
 
     switch (event->type) {
-    case BLE_GAP_EVENT_DISC:
-        rc = ble_hs_adv_parse_fields(&fields, event->disc.data,
-                                     event->disc.length_data);
-        if (rc != 0) {
-            return 0;
-        }
-
-        /* An advertisement report was received during GAP discovery. */
-        print_adv_fields(&fields);
-
-        /* Try to connect to the advertiser if it looks interesting. */
-        ble_spp_client_connect_if_interesting(&event->disc);
-        return 0;
-
     case BLE_GAP_EVENT_LINK_ESTAB:
         /* A new connection was established or a connection attempt failed. */
+        MODLOG_DFLT(INFO, "connection %s; status=%d ",
+                    event->connect.status == 0 ? "established" : "failed",
+                    event->connect.status);
         if (event->connect.status == 0) {
-            /* Connection successfully established. */
-            MODLOG_DFLT(INFO, "Connection established ");
             rc = ble_gap_conn_find(event->connect.conn_handle, &desc);
             assert(rc == 0);
-            memcpy(&connected_addr[event->connect.conn_handle].val, desc.peer_id_addr.val,
-                   PEER_ADDR_VAL_SIZE);
-            print_conn_desc(&desc);
-            MODLOG_DFLT(INFO, "\n");
-
-            /* Remember peer. */
-            rc = peer_add(event->connect.conn_handle);
-            if (rc != 0) {
-                MODLOG_DFLT(ERROR, "Failed to add peer; rc=%d\n", rc);
-                return 0;
-            }
-
-            /* Perform service discovery. */
-            rc = peer_disc_all(event->connect.conn_handle,
-                               ble_spp_client_on_disc_complete, NULL);
-            if (rc != 0) {
-                MODLOG_DFLT(ERROR, "Failed to discover services; rc=%d\n", rc);
-                return 0;
-            }
-        } else {
-            /* Connection attempt failed; resume scanning. */
-            MODLOG_DFLT(ERROR, "Error: Connection failed; status=%d\n",
-                        event->connect.status);
-            ble_spp_client_scan();
+            ble_spp_server_print_conn_desc(&desc);
         }
-
+        MODLOG_DFLT(INFO, "\n");
+        if (event->connect.status != 0 || CONFIG_BT_NIMBLE_MAX_CONNECTIONS > 1) {
+            /* Connection failed or if multiple connection allowed; resume advertising. */
+            ble_spp_server_advertise();
+        }
         return 0;
 
     case BLE_GAP_EVENT_DISCONNECT:
-        /* Connection terminated. */
         MODLOG_DFLT(INFO, "disconnect; reason=%d ", event->disconnect.reason);
-        print_conn_desc(&event->disconnect.conn);
+        ble_spp_server_print_conn_desc(&event->disconnect.conn);
         MODLOG_DFLT(INFO, "\n");
 
-        /* Forget about peer. */
-        memset(&connected_addr[event->disconnect.conn.conn_handle].val, 0, PEER_ADDR_VAL_SIZE);
-        attribute_handle[event->disconnect.conn.conn_handle] = 0;
-        peer_delete(event->disconnect.conn.conn_handle);
+        conn_handle_subs[event->disconnect.conn.conn_handle] = false;
 
-        /* Resume scanning. */
-        ble_spp_client_scan();
+        /* Connection terminated; resume advertising. */
+        ble_spp_server_advertise();
         return 0;
 
-    case BLE_GAP_EVENT_DISC_COMPLETE:
-        MODLOG_DFLT(INFO, "discovery complete; reason=%d\n",
-                    event->disc_complete.reason);
+    case BLE_GAP_EVENT_CONN_UPDATE:
+        /* The central has updated the connection parameters. */
+        MODLOG_DFLT(INFO, "connection updated; status=%d ",
+                    event->conn_update.status);
+        rc = ble_gap_conn_find(event->conn_update.conn_handle, &desc);
+        assert(rc == 0);
+        ble_spp_server_print_conn_desc(&desc);
+        MODLOG_DFLT(INFO, "\n");
         return 0;
 
-    case BLE_GAP_EVENT_NOTIFY_RX:
-        /* Peer sent us a notification or indication. */
-        MODLOG_DFLT(INFO, "received %s; conn_handle=%d attr_handle=%d "
-                    "attr_len=%d\n",
-                    event->notify_rx.indication ?
-                    "indication" :
-                    "notification",
-                    event->notify_rx.conn_handle,
-                    event->notify_rx.attr_handle,
-                    OS_MBUF_PKTLEN(event->notify_rx.om));
-
-        /* Attribute data is contained in event->notify_rx.om. Use
-         * `os_mbuf_copydata` to copy the data received in notification mbuf */
+    case BLE_GAP_EVENT_ADV_COMPLETE:
+        MODLOG_DFLT(INFO, "advertise complete; reason=%d",
+                    event->adv_complete.reason);
+        ble_spp_server_advertise();
         return 0;
 
     case BLE_GAP_EVENT_MTU:
@@ -348,73 +192,193 @@ ble_spp_client_gap_event(struct ble_gap_event *event, void *arg)
                     event->mtu.value);
         return 0;
 
+    case BLE_GAP_EVENT_SUBSCRIBE:
+        MODLOG_DFLT(INFO, "subscribe event; conn_handle=%d attr_handle=%d "
+                    "reason=%d prevn=%d curn=%d previ=%d curi=%d\n",
+                    event->subscribe.conn_handle,
+                    event->subscribe.attr_handle,
+                    event->subscribe.reason,
+                    event->subscribe.prev_notify,
+                    event->subscribe.cur_notify,
+                    event->subscribe.prev_indicate,
+                    event->subscribe.cur_indicate);
+        conn_handle_subs[event->subscribe.conn_handle] = true;
+        return 0;
+
     default:
         return 0;
     }
 }
 
 static void
-ble_spp_client_on_reset(int reason)
+ble_spp_server_on_reset(int reason)
 {
     MODLOG_DFLT(ERROR, "Resetting state; reason=%d\n", reason);
 }
 
 static void
-ble_spp_client_on_sync(void)
+ble_spp_server_on_sync(void)
 {
     int rc;
 
-    /* Make sure we have proper identity address set (public preferred) */
     rc = ble_hs_util_ensure_addr(0);
     assert(rc == 0);
 
-    /* Begin scanning for a peripheral to connect to. */
-    ble_spp_client_scan();
+    /* Figure out address to use while advertising (no privacy for now) */
+    rc = ble_hs_id_infer_auto(0, &own_addr_type);
+    if (rc != 0) {
+        MODLOG_DFLT(ERROR, "error determining address type; rc=%d\n", rc);
+        return;
+    }
+
+    /* Printing ADDR */
+    uint8_t addr_val[6] = {0};
+    rc = ble_hs_id_copy_addr(own_addr_type, addr_val, NULL);
+
+    MODLOG_DFLT(INFO, "Device Address: ");
+    print_addr(addr_val);
+    MODLOG_DFLT(INFO, "\n");
+    /* Begin advertising. */
+    ble_spp_server_advertise();
 }
 
-void ble_spp_client_host_task(void *param)
+void ble_spp_server_host_task(void *param)
 {
-    ESP_LOGI(tag, "BLE Host Task Started");
+    MODLOG_DFLT(INFO, "BLE Host Task Started");
     /* This function will return only when nimble_port_stop() is executed */
     nimble_port_run();
 
     nimble_port_freertos_deinit();
 }
-void ble_client_uart_task(void *pvParameters)
+
+/* Callback function for custom service */
+static int  ble_svc_gatt_handler(uint16_t conn_handle, uint16_t attr_handle, struct ble_gatt_access_ctxt *ctxt, void *arg)
 {
-    ESP_LOGI(tag, "BLE client UART task started");
-    int rc;
-    int i;
+    switch (ctxt->op) {
+    case BLE_GATT_ACCESS_OP_READ_CHR:
+        MODLOG_DFLT(INFO, "Callback for read");
+        break;
+
+    case BLE_GATT_ACCESS_OP_WRITE_CHR:
+        MODLOG_DFLT(INFO, "Data received in write event,conn_handle = %x,attr_handle = %x", conn_handle, attr_handle);
+        break;
+
+    default:
+        MODLOG_DFLT(INFO, "\nDefault Callback");
+        break;
+    }
+    return 0;
+}
+
+/* Define new custom service */
+static const struct ble_gatt_svc_def new_ble_svc_gatt_defs[] = {
+    {
+        /*** Service: SPP */
+        .type = BLE_GATT_SVC_TYPE_PRIMARY,
+        .uuid = BLE_UUID16_DECLARE(BLE_SVC_SPP_UUID16),
+        .characteristics = (struct ble_gatt_chr_def[])
+        { {
+                /* Support SPP service */
+                .uuid = BLE_UUID16_DECLARE(BLE_SVC_SPP_CHR_UUID16),
+                .access_cb = ble_svc_gatt_handler,
+                .val_handle = &ble_spp_svc_gatt_read_val_handle,
+                .flags = BLE_GATT_CHR_F_READ | BLE_GATT_CHR_F_WRITE | BLE_GATT_CHR_F_NOTIFY,
+            }, {
+                0, /* No more characteristics */
+            }
+        },
+    },
+    {
+        0, /* No more services. */
+    },
+};
+
+static void
+gatt_svr_register_cb(struct ble_gatt_register_ctxt *ctxt, void *arg)
+{
+    char buf[BLE_UUID_STR_LEN];
+
+    switch (ctxt->op) {
+    case BLE_GATT_REGISTER_OP_SVC:
+        MODLOG_DFLT(DEBUG, "registered service %s with handle=%d\n",
+                    ble_uuid_to_str(ctxt->svc.svc_def->uuid, buf),
+                    ctxt->svc.handle);
+        break;
+
+    case BLE_GATT_REGISTER_OP_CHR:
+        MODLOG_DFLT(DEBUG, "registering characteristic %s with "
+                    "def_handle=%d val_handle=%d\n",
+                    ble_uuid_to_str(ctxt->chr.chr_def->uuid, buf),
+                    ctxt->chr.def_handle,
+                    ctxt->chr.val_handle);
+        break;
+
+    case BLE_GATT_REGISTER_OP_DSC:
+        MODLOG_DFLT(DEBUG, "registering descriptor %s with handle=%d\n",
+                    ble_uuid_to_str(ctxt->dsc.dsc_def->uuid, buf),
+                    ctxt->dsc.handle);
+        break;
+
+    default:
+        assert(0);
+        break;
+    }
+}
+
+int gatt_svr_init(void)
+{
+    int rc = 0;
+    ble_svc_gap_init();
+    ble_svc_gatt_init();
+
+    rc = ble_gatts_count_cfg(new_ble_svc_gatt_defs);
+
+    if (rc != 0) {
+        return rc;
+    }
+
+    rc = ble_gatts_add_svcs(new_ble_svc_gatt_defs);
+    if (rc != 0) {
+        return rc;
+    }
+
+    return 0;
+}
+
+
+void ble_server_uart_task(void *pvParameters)
+{
+    MODLOG_DFLT(INFO, "BLE server UART_task started\n");
     uart_event_t event;
+    int rc = 0;
     for (;;) {
         //Waiting for UART event.
-        if (xQueueReceive(spp_common_uart_queue, (void * )&event, (TickType_t)portMAX_DELAY)) {
+        if (xQueueReceive(spp_common_uart_queue, (void * )&event, (TickType_t)portMAX_DELAY))            {
             switch (event.type) {
             //Event of UART receiving data
             case UART_DATA:
                 if (event.size) {
+                    uint8_t *ntf;
+                    ntf = (uint8_t *)malloc(sizeof(uint8_t) * event.size);
+                    memset(ntf, 0x00, event.size);
+                    uart_read_bytes(UART_NUM_0, ntf, event.size, portMAX_DELAY);
 
-                    /* Writing characteristics */
-                    uint8_t *temp = NULL;
-                    temp = (uint8_t *)malloc(sizeof(uint8_t) * event.size);
-                    if (temp == NULL) {
-                        ESP_LOGE(tag, "malloc failed,%s L#%d", __func__, __LINE__);
-                        break;
-                    }
-                    memset(temp, 0x0, event.size);
-                    uart_read_bytes(UART_NUM_0, temp, event.size, portMAX_DELAY);
-                    for ( i = 0; i <= CONFIG_BT_NIMBLE_MAX_CONNECTIONS; i++) {
-                        if (attribute_handle[i] != 0) {
-                            rc = ble_gattc_write_flat(i, attribute_handle[i], temp, event.size, NULL, NULL);
+                    for (int i = 0; i <= CONFIG_BT_NIMBLE_MAX_CONNECTIONS; i++) {
+                        /* Check if client has subscribed to notifications */
+                        if (conn_handle_subs[i]) {
+                            struct os_mbuf *txom;
+                            txom = ble_hs_mbuf_from_flat(ntf, event.size);
+                            rc = ble_gatts_notify_custom(i, ble_spp_svc_gatt_read_val_handle,
+                                                         txom);
                             if (rc == 0) {
-                                ESP_LOGI(tag, "Write in uart task success!");
+                                MODLOG_DFLT(INFO, "Notification sent successfully");
                             } else {
-                                ESP_LOGI(tag, "Error in writing characteristic rc=%d", rc);
+                                MODLOG_DFLT(INFO, "Error in sending notification rc = %d", rc);
                             }
-                            vTaskDelay(10);
                         }
                     }
-                    free(temp);
+
+		    free(ntf);
                 }
                 break;
             default:
@@ -423,7 +387,6 @@ void ble_client_uart_task(void *pvParameters)
         }
     }
     vTaskDelete(NULL);
-
 }
 static void ble_spp_uart_init(void)
 {
@@ -436,22 +399,24 @@ static void ble_spp_uart_init(void)
         .rx_flow_ctrl_thresh = 122,
         .source_clk = UART_SCLK_DEFAULT,
     };
-
     //Install UART driver, and get the queue.
     uart_driver_install(UART_NUM_0, 4096, 8192, 10, &spp_common_uart_queue, 0);
     //Set UART parameters
     uart_param_config(UART_NUM_0, &uart_config);
     //Set UART pins
     uart_set_pin(UART_NUM_0, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
-    xTaskCreate(ble_client_uart_task, "uTask", 4096, (void *)UART_NUM_0, 8, NULL);
+    xTaskCreate(ble_server_uart_task, "uTask", 4096, (void *)UART_NUM_0, 8, NULL);
 }
+
+
 void
 app_main(void)
 {
     int rc;
+
     /* Initialize NVS — it is used to store PHY calibration data */
     esp_err_t ret = nvs_flash_init();
-    if  (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
         ESP_ERROR_CHECK(nvs_flash_erase());
         ret = nvs_flash_init();
     }
@@ -463,24 +428,47 @@ app_main(void)
         return;
     }
 
-    /* Initialize UART driver and start uart task */
+    /* Initialize connection_handle array */
+    for (int i = 0; i <= CONFIG_BT_NIMBLE_MAX_CONNECTIONS; i++) {
+        conn_handle_subs[i] = false;
+    }
+
+    /* Initialize uart driver and start uart task */
     ble_spp_uart_init();
 
-    /* Configure the host. */
-    ble_hs_cfg.reset_cb = ble_spp_client_on_reset;
-    ble_hs_cfg.sync_cb = ble_spp_client_on_sync;
+    /* Initialize the NimBLE host configuration. */
+    ble_hs_cfg.reset_cb = ble_spp_server_on_reset;
+    ble_hs_cfg.sync_cb = ble_spp_server_on_sync;
+    ble_hs_cfg.gatts_register_cb = gatt_svr_register_cb;
     ble_hs_cfg.store_status_cb = ble_store_util_status_rr;
 
-    /* Initialize data structures to track connected peers. */
-    rc = peer_init(MYNEWT_VAL(BLE_MAX_CONNECTIONS), 64, 64, 64);
+    ble_hs_cfg.sm_io_cap = CONFIG_EXAMPLE_IO_TYPE;
+#ifdef CONFIG_EXAMPLE_BONDING
+    ble_hs_cfg.sm_bonding = 1;
+#endif
+#ifdef CONFIG_EXAMPLE_MITM
+    ble_hs_cfg.sm_mitm = 1;
+#endif
+#ifdef CONFIG_EXAMPLE_USE_SC
+    ble_hs_cfg.sm_sc = 1;
+#else
+    ble_hs_cfg.sm_sc = 0;
+#endif
+#ifdef CONFIG_EXAMPLE_BONDING
+    ble_hs_cfg.sm_our_key_dist = 1;
+    ble_hs_cfg.sm_their_key_dist = 1;
+#endif
+
+    /* Register custom service */
+    rc = gatt_svr_init();
     assert(rc == 0);
 
     /* Set the default device name. */
-    rc = ble_svc_gap_device_name_set("nimble-ble-spp-client");
+    rc = ble_svc_gap_device_name_set("nimble-ble-spp-svr");
     assert(rc == 0);
 
     /* XXX Need to have template for store */
     ble_store_config_init();
 
-    nimble_port_freertos_init(ble_spp_client_host_task);
+    nimble_port_freertos_init(ble_spp_server_host_task);
 }

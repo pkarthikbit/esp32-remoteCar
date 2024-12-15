@@ -1,7 +1,7 @@
 | Supported Targets | ESP32 | ESP32-C2 | ESP32-C3 | ESP32-C5 | ESP32-C6 | ESP32-C61 | ESP32-H2 | ESP32-S3 |
 | ----------------- | ----- | -------- | -------- | -------- | -------- | --------- | -------- | -------- |
 
-# BLE SPP central example
+# BLE SPP peripheral example
 
   In Bluetooth classic (BR/EDR) systems, a Serial Port Profile (SPP) is an adopted profile defined by the Bluetooth Special Interest Group (SIG) used to emulate a serial port connection over a Bluetooth wireless connection. For BLE systems, an adopted SPP profile over BLE is not defined, thus emulation of a serial port must be implemented as a vendor-specific custom profile.
 
@@ -17,7 +17,7 @@
 
 ### Event Processing
 
-  The spp server has two main event processing functions for BLE event:
+  The SPP server has two main event processing functions for BLE event:
 
 ```c
   static int ble_spp_server_gap_event(struct ble_gap_event *event, void *arg);
@@ -38,12 +38,12 @@
 
   Tasks:
 
-  * `ble_client_uart_task`            - process Uart
+  * `ble_server_uart_task`            - process Uart
 
 ### Packet Structure
 
   After the Uart received data, the data will be posted to Uart task. Then, in the UART_DATA event, the raw data may be retrieved. The max length is 120 bytes every time.
-  If you run the BLE SPP demo with two ESP32 chips, the MTU size will be exchanged after the BLE connection is established, so every packet can be send directly.
+  If you run the BLE SPP demo with two ESP32 chips, the MTU size will be exchanged for 200 bytes after the ble connection is established, so every packet can be send directly.
   If you only run the ble_spp_server demo, and it was connected by a phone, the MTU size may be less than 123 bytes. In such a case the data will be split into fragments and send in turn.
   In every packet, we add 4 bytes to indicate that this is a fragment packet. The first two bytes contain "##" if this is a fragment packet, the third byte is the total number of the packets, the fourth byte is the current number of this packet.
   The phone APP need to check the structure of the packet if it want to communicate with the ble_spp_server demo.
@@ -54,7 +54,7 @@
 
 ### Receiving Data Wirelessly
 
-  The server will receive this data in the BLE_GATT_ACCESS_OP_WRITE_CHR event.
+   The server will receive this data in the BLE_GATT_ACCESS_OP_WRITE_CHR event.
 
 ### GATT Server Attribute Table
 
@@ -65,14 +65,9 @@
   SPP_COMMAND_CHAR|0xABF3|READ&WRITE_NR
   SPP_STATUS_CHAR|0xABF4|READ & NOTIFY
 
-This example creates GATT client and performs passive scan, it then connects to peripheral device if the device advertises connectability and the write characteristic.
+This example creates GATT server and advertises data, it then gets connected to a central device.
 
-It performs three GATT operations against the specified peer:
-
-* Discover all services,characteristics and descriptors.
-
-* After the discovery is completed, take UART input from user and write characteristic.
-
+It takes input from user and performs notify GATT operations against the specified peer.
 
 Note :
 
@@ -104,24 +99,14 @@ See the Getting Started Guide for full steps to configure and use ESP-IDF to bui
 This is the console output on successful connection:
 
 ```
-I (487) NimBLE_SPP_BLE_CENT: BLE Host Task Started
+I (464) NimBLE_SPP_BLE_PRPH: BLE Host Task Started
 GAP procedure initiated: stop advertising.
-GAP procedure initiated: discovery; own_addr_type=0 filter_policy=0 passive=1 limited=0 filter_duplicates=1 duration=forever
-GAP procedure initiated: connect; peer_addr_type=0 peer_addr=7c:df:a1:40:3e:fa scan_itvl=16 scan_window=16 itvl_min=24 itvl_max=40 latency=0 supervision_timeout=256 min_ce_len=0 max_ce_len=0 own_addr_type=0
-Connection established
-GATT procedure initiated: discover all services
-GATT procedure initiated: discover all characteristics; start_handle=1 end_handle=5
-GATT procedure initiated: discover all characteristics; start_handle=6 end_handle=9
-GATT procedure initiated: discover all characteristics; start_handle=10 end_handle=14
-GATT procedure initiated: discover all characteristics; start_handle=15 end_handle=65535
-GATT procedure initiated: discover all descriptors; chr_val_handle=8 end_handle=9
-GATT procedure initiated: discover all descriptors; chr_val_handle=17 end_handle=18
-GATT procedure initiated: discover all descriptors; chr_val_handle=20 end_handle=65535
-Service discovery complete; status=0 conn_handle=1
-I (9277) NimBLE_SPP_BLE_CENT: Data sent from client uart task =
-1b5b41
-GATT procedure initiated: write; att_handle=17 len=3
-I (9277) NimBLE_SPP_BLE_CENT: Write in uart task success!
-received notification; conn_handle=1 attr_handle=20 attr_len=1
+Device Address: 7c:df:a1:40:3e:fa
+GAP procedure initiated: advertise; disc_mode=2 adv_channel_map=0 own_addr_type=0 adv_filter_policy=0 adv_itvl_min=0 adv_itvl_max=0
+connection established; status=0 handle=1 our_ota_addr_type=0 our_ota_addr=7c:df:a1:40:3e:fa our_id_addr_type=0 our_id_addr=7c:df:a1:40:3e:fa peer_ota_addr_type=0 peer_ota_addr=7c:df:a1:c2:19:92 peer_id_addr_type=0 peer_id_addr=7c:df:a1:c2:19:92 conn_itvl=40 conn_latency=0 supervision_timeout=256 encrypted=0 authenticated=0 bonded=0
+
+I (6924) NimBLE_SPP_BLE_PRPH: Data received in write event,conn_handle = 1,attr_handle = 11
+1b5b41I
+(10824) NimBLE_SPP_BLE_PRPH: Notification sent successfully
 
 ```
