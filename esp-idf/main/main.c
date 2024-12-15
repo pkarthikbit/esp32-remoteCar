@@ -71,7 +71,7 @@ ble_spp_server_advertise(void)
      *     o Flags (indicates advertisement type and other general info).
      *     o Advertising tx power.
      *     o Device name.
-     *     o 16-bit service UUIDs (alert notifications).
+     *     o 128-bit service UUIDs (alert notifications).
      */
 
     memset(&fields, 0, sizeof fields);
@@ -95,11 +95,11 @@ ble_spp_server_advertise(void)
     fields.name_len = strlen(name);
     fields.name_is_complete = 1;
 
-    fields.uuids16 = (ble_uuid16_t[]) {
-        BLE_UUID16_INIT(BLE_SVC_SPP_UUID16)
+    fields.uuids128 = (ble_uuid128_t[]) {
+        BLE_UUID128_INIT(BLE_SVC_SPP_UUID128)
     };
-    fields.num_uuids16 = 1;
-    fields.uuids16_is_complete = 1;
+    fields.num_uuids128 = 1;
+    fields.uuids128_is_complete = 1;
 
     rc = ble_gap_adv_set_fields(&fields);
     if (rc != 0) {
@@ -275,11 +275,11 @@ static const struct ble_gatt_svc_def new_ble_svc_gatt_defs[] = {
     {
         /*** Service: SPP */
         .type = BLE_GATT_SVC_TYPE_PRIMARY,
-        .uuid = BLE_UUID16_DECLARE(BLE_SVC_SPP_UUID16),
+        .uuid = BLE_UUID128_DECLARE(BLE_SVC_SPP_UUID128),
         .characteristics = (struct ble_gatt_chr_def[])
         { {
                 /* Support SPP service */
-                .uuid = BLE_UUID16_DECLARE(BLE_SVC_SPP_CHR_UUID16),
+                .uuid = BLE_UUID128_DECLARE(BLE_SVC_SPP_CHR_UUID128),
                 .access_cb = ble_svc_gatt_handler,
                 .val_handle = &ble_spp_svc_gatt_read_val_handle,
                 .flags = BLE_GATT_CHR_F_READ | BLE_GATT_CHR_F_WRITE | BLE_GATT_CHR_F_NOTIFY,

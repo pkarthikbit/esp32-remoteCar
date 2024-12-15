@@ -386,7 +386,7 @@ ble_spp_server_advertise(void)
     fields.name_is_complete = 1;
 
     fields.uuids16 = (ble_uuid16_t[]) {
-        BLE_UUID16_INIT(BLE_SVC_SPP_UUID16)
+        BLE_UUID16_INIT(BLE_SVC_SPP_UUID128)
     };
     fields.num_uuids16 = 1;
     fields.uuids16_is_complete = 1;
@@ -493,11 +493,11 @@ static const struct ble_gatt_svc_def new_ble_svc_gatt_defs[] = {
     {
         /*** Service: SPP */
         .type = BLE_GATT_SVC_TYPE_PRIMARY,
-        .uuid = BLE_UUID16_DECLARE(BLE_SVC_SPP_UUID16),
+        .uuid = BLE_UUID16_DECLARE(BLE_SVC_SPP_UUID128),
         .characteristics = (struct ble_gatt_chr_def[])
         { {
                 /* Support SPP service */
-                .uuid = BLE_UUID16_DECLARE(BLE_SVC_SPP_CHR_UUID16),
+                .uuid = BLE_UUID16_DECLARE(BLE_SVC_SPP_CHR_UUID128),
                 .access_cb = ble_svc_gatt_handler,
                 .val_handle = &ble_spp_svc_gatt_read_val_handle,
                 .flags = BLE_GATT_CHR_F_READ | BLE_GATT_CHR_F_WRITE | BLE_GATT_CHR_F_NOTIFY,
@@ -516,9 +516,9 @@ The provided code defines a custom service for BLE communication. Here is a summ
 
 1. It defines a custom BLE service using the `ble_gatt_svc_def` structure.
 
-2. This service is marked as a primary service using `BLE_GATT_SVC_TYPE_PRIMARY`. The UUID (Universally Unique Identifier) for the service is specified as `BLE_SVC_SPP_UUID16`.
+2. This service is marked as a primary service using `BLE_GATT_SVC_TYPE_PRIMARY`. The UUID (Universally Unique Identifier) for the service is specified as `BLE_SVC_SPP_UUID128`.
 
-3. Inside the service, there is a list of characteristics defined using the `ble_gatt_chr_def` structure. In this case, there's only one characteristic defined. The characteristic supports various operations, including reading, writing, and notifications. The UUID for the characteristic is specified as `BLE_SVC_SPP_CHR_UUID16`.
+3. Inside the service, there is a list of characteristics defined using the `ble_gatt_chr_def` structure. In this case, there's only one characteristic defined. The characteristic supports various operations, including reading, writing, and notifications. The UUID for the characteristic is specified as `BLE_SVC_SPP_CHR_UUID128`.
 
 4. A callback function named `ble_svc_gatt_handler` is assigned to handle access to this characteristic.
 
