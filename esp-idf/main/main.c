@@ -18,7 +18,12 @@
 #include "driver/uart.h"
 
 /* Ref @ https://github.com/espressif/esp-idf/issues/9798 */
-#define CONFIG_EXAMPLE_EXTENDED_ADV 1
+static uint8_t ext_adv_pattern_1[] = {
+    0x02, 0x01, 0x06,
+    0x03, 0x03, 0xab, 0xcd,
+    0x03, 0x03, 0x18, 0x11,
+    0x11, 0X09, 'n', 'i', 'm', 'b', 'l', 'e', '-', 'b', 'l', 'e', 'p', 'r', 'p', 'h', '-', 'e',
+};
 
 static int ble_spp_server_gap_event(struct ble_gap_event *event, void *arg);
 static uint8_t own_addr_type;
@@ -64,62 +69,54 @@ ble_spp_server_print_conn_desc(struct ble_gap_conn_desc *desc)
 static void
 ble_spp_server_advertise(void)
 {
-    struct ble_gap_adv_params adv_params;
-    struct ble_hs_adv_fields fields;
-    const char *name;
+    struct ble_gap_ext_adv_params params;
+    struct os_mbuf *data;
+    uint8_t instance = 0;
     int rc;
 
-    /**
-     *  Set the advertisement data included in our advertisements:
-     *     o Flags (indicates advertisement type and other general info).
-     *     o Advertising tx power.
-     *     o Device name.
-     *     o 128-bit service UUIDs (alert notifications).
-     */
-
-    memset(&fields, 0, sizeof fields);
-
-    /* Advertise two flags:
-     *     o Discoverability in forthcoming advertisement (general)
-     *     o BLE-only (BR/EDR unsupported).
-     */
-    fields.flags = BLE_HS_ADV_F_DISC_GEN |
-                   BLE_HS_ADV_F_BREDR_UNSUP;
-
-    /* Indicate that the TX power level field should be included; have the
-     * stack fill this value automatically.  This is done by assigning the
-     * special value BLE_HS_ADV_TX_PWR_LVL_AUTO.
-     */
-    fields.tx_pwr_lvl_is_present = 1;
-    fields.tx_pwr_lvl = BLE_HS_ADV_TX_PWR_LVL_AUTO;
-
-    name = ble_svc_gap_device_name();
-    fields.name = (uint8_t *)name;
-    fields.name_len = strlen(name);
-    fields.name_is_complete = 1;
-
-    fields.uuids128 = (ble_uuid128_t[]) {
-        BLE_UUID128_INIT(BLE_SVC_SPP_UUID128)
-    };
-    fields.num_uuids128 = 1;
-    fields.uuids128_is_complete = 1;
-
-    rc = ble_gap_adv_set_fields(&fields);
-    if (rc != 0) {
-        MODLOG_DFLT(ERROR, "error setting advertisement data; rc=%d\n", rc);
+    /* First check if any instance is already active */
+    if(ble_gap_ext_adv_active(instance)) {
         return;
     }
 
-    /* Begin advertising. */
-    memset(&adv_params, 0, sizeof adv_params);
-    adv_params.conn_mode = BLE_GAP_CONN_MODE_UND;
-    adv_params.disc_mode = BLE_GAP_DISC_MODE_GEN;
-    rc = ble_gap_adv_start(own_addr_type, NULL, BLE_HS_FOREVER,
-                           &adv_params, ble_spp_server_gap_event, NULL);
-    if (rc != 0) {
-        MODLOG_DFLT(ERROR, "error enabling advertisement; rc=%d\n", rc);
-        return;
-    }
+    /* use defaults for non-set params */
+    memset (&params, 0, sizeof(params));
+
+    /* enable connectable advertising */
+    params.connectable = 1;
+
+    /* advertise using random addr */
+    params.own_addr_type = BLE_OWN_ADDR_PUBLIC;
+
+    params.primary_phy = BLE_HCI_LE_PHY_1M;
+    params.secondary_phy = BLE_HCI_LE_PHY_2M;
+    //params.tx_power = 127;
+    params.sid = 1;
+
+    params.itvl_min = BLE_GAP_ADV_FAST_INTERVAL1_MIN;
+    params.itvl_max = BLE_GAP_ADV_FAST_INTERVAL1_MIN;
+
+    /* configure instance 0 */
+    rc = ble_gap_ext_adv_configure(instance, &params, NULL,
+                                   bleprph_gap_event, NULL);
+    assert (rc == 0);
+
+    /* in this case only scan response is allowed */
+
+    /* get mbuf for scan rsp data */
+    data = os_msys_get_pkthdr(sizeof(ext_adv_pattern_1), 0);
+    assert(data);
+
+    /* fill mbuf with scan rsp data */
+    rc = os_mbuf_append(data, ext_adv_pattern_1, sizeof(ext_adv_pattern_1));
+    assert(rc == 0);
+
+    rc = ble_gap_ext_adv_set_data(instance, data);
+    assert (rc == 0);
+
+    /* start advertising */
+    rc = ble_gap_ext_adv_start(instance, 0, 0);
+    assert (rc == 0);
 }
 
 /**
