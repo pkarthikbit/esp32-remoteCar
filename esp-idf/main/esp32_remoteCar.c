@@ -4,19 +4,10 @@
  * SPDX-License-Identifier: Unlicense OR CC0-1.0
  */
 
-#include "esp_log.h"
-#include "nvs_flash.h"
-/* BLE */
-#include "nimble/nimble_port.h"
-#include "nimble/nimble_port_freertos.h"
-#include "host/ble_hs.h"
-#include "host/util/util.h"
-#include "console/console.h"
-#include "services/gap/ble_svc_gap.h"
-#include "services/gatt/ble_svc_gatt.h"
-#include "esp32_remoteCar.h"
-#include "driver/uart.h"
+#include "esp32_remoteCar_inf.h"
+#include "esp32_remoteCar_priv.h"
 
+/******************* Variable declaration/ definition ********************/
 /* Ref @ https://github.com/espressif/esp-idf/issues/9798 */
 static uint8_t ext_adv_pattern_1[] = {
     0x02, 0x01, 0x06,
@@ -24,16 +15,17 @@ static uint8_t ext_adv_pattern_1[] = {
     0x03, 0x03, 0x18, 0x11,
     0x11, 0X09, 'n', 'i', 'm', 'b', 'l', 'e', '-', 'b', 'l', 'e', 'p', 'r', 'p', 'h', '-', 'e',
 };
-
-static int ble_spp_server_gap_event(struct ble_gap_event *event, void *arg);
 static uint8_t own_addr_type;
-int gatt_svr_register(void);
-QueueHandle_t spp_common_uart_queue = NULL;
 static bool conn_handle_subs[CONFIG_BT_NIMBLE_MAX_CONNECTIONS + 1];
 static uint16_t ble_spp_svc_gatt_read_val_handle;
+QueueHandle_t spp_common_uart_queue = NULL;
 
+/******************* Function declaration ********************/
+static int ble_spp_server_gap_event(struct ble_gap_event *event, void *arg);
+int gatt_svr_register(void);
 void ble_store_config_init(void);
 
+/******************* Function definition ********************/
 /**
  * Logs information about a connection to the console.
  */
@@ -344,7 +336,6 @@ int gatt_svr_init(void)
 
     return 0;
 }
-
 
 void ble_server_uart_task(void *pvParameters)
 {

@@ -4,13 +4,9 @@
  * SPDX-License-Identifier: Unlicense OR CC0-1.0
  */
 
-#ifndef H_BLESPPSERVER_
-#define H_BLESPPSERVER_
+#ifndef ESP32_REMOTECAR_PRIV_H
+#define ESP32_REMOTECAR_PRIV_H
 
-#include <stdbool.h>
-#include "nimble/ble.h"
-#include "modlog/modlog.h"
-#include "esp_peripheral.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -38,4 +34,4 @@ struct ble_gatt_register_ctxt;
 }
 #endif
 
-#endif
+#endif /* ESP32_REMOTECAR_PRIV_H */
