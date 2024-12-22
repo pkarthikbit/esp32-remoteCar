@@ -17,6 +17,9 @@
 #include "ble_spp_server.h"
 #include "driver/uart.h"
 
+/* Ref @ https://github.com/espressif/esp-idf/issues/9798 */
+#define CONFIG_EXAMPLE_EXTENDED_ADV 1
+
 static int ble_spp_server_gap_event(struct ble_gap_event *event, void *arg);
 static uint8_t own_addr_type;
 int gatt_svr_register(void);
