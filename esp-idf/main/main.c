@@ -98,7 +98,7 @@ ble_spp_server_advertise(void)
 
     /* configure instance 0 */
     rc = ble_gap_ext_adv_configure(instance, &params, NULL,
-                                   bleprph_gap_event, NULL);
+                                   ble_spp_server_gap_event, NULL);
     assert (rc == 0);
 
     /* in this case only scan response is allowed */
