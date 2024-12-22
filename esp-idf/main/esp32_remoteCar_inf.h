@@ -9,7 +9,6 @@
 
 /* STD */
 #include <stdbool.h>
-#include "modlog/modlog.h"
 
 /* ESP32 Generic */
 #include "esp_peripheral.h"
@@ -18,6 +17,7 @@
 
 /* ESP32 Driver */
 #include "driver/uart.h"
+#include "modlog/modlog.h"
 
 /* BLE */
 #include "nimble/ble.h"
