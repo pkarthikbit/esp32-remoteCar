@@ -6,7 +6,7 @@
 #include "esp32_remoteCar_inf.h"
 #include "esp32_remoteCar_priv.h"
 
-static uint8_t gatt_svr_static_val[500];
+static uint8_t gatt_svr_static_val[50];
 
 /**
  * Utility function to log an array of bytes.
@@ -47,7 +47,7 @@ static int  ble_svc_gatt_handler(uint16_t conn_handle, uint16_t attr_handle, str
         MODLOG_DFLT(DEBUG, "Received value = \n");
         for (int x = 0; x < (sizeof gatt_svr_static_val); x++)
         {
-            MODLOG_DFLT(DEBUG, "%s", gatt_svr_static_val[x]);
+            MODLOG_DFLT(DEBUG, "%x", gatt_svr_static_val[x]);
         }
         MODLOG_DFLT(DEBUG, "\n");
         
