@@ -36,20 +36,21 @@ gatt_svr_chr_write(uint16_t conn_handle, uint16_t attr_handle,
 static int  ble_svc_gatt_handler(uint16_t conn_handle, uint16_t attr_handle, struct ble_gatt_access_ctxt *ctxt, void *arg)
 {
     static int rc;
+    uint16_t act_len;
 
     if (ctxt->op == BLE_GATT_ACCESS_OP_WRITE_CHR) 
     {
         rc = gatt_svr_chr_write(conn_handle, attr_handle,
                                 ctxt->om, 0,
                                 sizeof gatt_svr_static_val,
-                                &gatt_svr_static_val, NULL);
+                                &gatt_svr_static_val, &act_len);
         
-        MODLOG_DFLT(DEBUG, "Received value = \n");
-        for (int x = 0; x < (sizeof gatt_svr_static_val); x++)
+        MODLOG_DFLT(INFO, "value = \n");
+        for (int x = 0; x < act_len; x++)
         {
-            MODLOG_DFLT(DEBUG, "%x", gatt_svr_static_val[x]);
+            MODLOG_DFLT(INFO, "%x", gatt_svr_static_val[x]);
         }
-        MODLOG_DFLT(DEBUG, "\n");
+        MODLOG_DFLT(INFO, "\n");
         
         return rc;
     }
