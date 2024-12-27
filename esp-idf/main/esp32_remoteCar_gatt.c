@@ -43,7 +43,14 @@ static int  ble_svc_gatt_handler(uint16_t conn_handle, uint16_t attr_handle, str
                                 ctxt->om, 0,
                                 sizeof gatt_svr_static_val,
                                 &gatt_svr_static_val, NULL);
-        MODLOG_DFLT(DEBUG, "received val = %s", gatt_svr_static_val);
+        
+        MODLOG_DFLT(DEBUG, "Received value = \n");
+        for (int x = 0; x < (sizeof gatt_svr_static_val); x++)
+        {
+            MODLOG_DFLT(DEBUG, "%s", gatt_svr_static_val[x]);
+        }
+        MODLOG_DFLT(DEBUG, "\n");
+        
         return rc;
     }
     else if (ctxt->op == BLE_GATT_ACCESS_OP_READ_CHR) 
