@@ -14,6 +14,9 @@ extern const struct ble_gatt_svc_def new_ble_svc_gatt_defs[];
 extern void ble_spp_server_advertise(void);
 extern int ble_spp_server_gap_event(struct ble_gap_event *event, void *arg);
 extern bool conn_handle_subs[CONFIG_BT_NIMBLE_MAX_CONNECTIONS + 1];
+extern static uint8_t ext_adv_pattern_1[];
 extern uint16_t ble_spp_svc_gatt_receive_val_handle;
+extern uint16_t ble_spp_svc_gatt_transmit_val_handle;
+
 
 #endif /* ESP32_REMOTECAR_PUB_H */

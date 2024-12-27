@@ -8,13 +8,6 @@
 
 /******************* Variable declaration/ definition ********************/
 static uint8_t own_addr_type;
-/* Ref @ https://github.com/espressif/esp-idf/issues/9798 */
-static uint8_t ext_adv_pattern_1[] = {
-    0x02, 0x01, 0x06,
-    0x03, 0x03, 0xab, 0xcd,
-    0x03, 0x03, 0x18, 0x11,
-    0x11, 0x09, 'n', 'i', 'm', 'b', 'l', 'e', '-', 'b', 'l', 'e', 'p', 'r', 'p', 'h', '-', 'e',
-};
 
 /******************* Function definition ********************/
 /**
