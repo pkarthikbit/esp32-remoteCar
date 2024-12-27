@@ -15,7 +15,7 @@ static int  ble_svc_gatt_handler(uint16_t conn_handle, uint16_t attr_handle, str
         break;
 
     case BLE_GATT_ACCESS_OP_WRITE_CHR:
-        MODLOG_DFLT(INFO, "Data received in write event,conn_handle = %x,attr_handle = %x", conn_handle, attr_handle);
+        MODLOG_DFLT(INFO, "Data received in write event,ble_gatt_access_ctxt = %s,arg = %s", *ctxt, *arg);
         break;
 
     default:
