@@ -6,26 +6,53 @@
 #include "esp32_remoteCar_inf.h"
 #include "esp32_remoteCar_priv.h"
 
+static uint8_t gatt_svr_static_read_val[500];
+static uint8_t gatt_svr_static_write_val[500];
+
 /**
  * Utility function to log an array of bytes.
  */
+static int
+gatt_svr_chr_write(uint16_t conn_handle, uint16_t attr_handle,
+                   struct os_mbuf *om, uint16_t min_len, uint16_t max_len,
+                   void *dst, uint16_t *len)
+{
+    uint16_t om_len;
+    int rc;
+
+    om_len = OS_MBUF_PKTLEN(om);
+    if (om_len < min_len || om_len > max_len) {
+        return BLE_ATT_ERR_INVALID_ATTR_VALUE_LEN;
+    }
+
+    rc = ble_hs_mbuf_to_flat(om, dst, max_len, len);
+    if (rc != 0) {
+        return BLE_ATT_ERR_UNLIKELY;
+    }
+
+    return 0;
+}
+
 /* Callback function for custom service */
 static int  ble_svc_gatt_handler(uint16_t conn_handle, uint16_t attr_handle, struct ble_gatt_access_ctxt *ctxt, void *arg)
 {
-    switch (ctxt->op) 
+    if (ctxt->op == BLE_GATT_ACCESS_OP_WRITE_CHR) 
     {
-        case BLE_GATT_ACCESS_OP_READ_CHR:
-            return read_value(conn_handle, attr_handle,
-                        ctxt, arg);
-
-        case BLE_GATT_ACCESS_OP_WRITE_CHR:
-            return write_value(conn_handle, attr_handle,
-                            ctxt, arg);
-
-        default:
-            MODLOG_DFLT(INFO, "\nDefault Callback");
-            break;
+        rc = gatt_svr_chr_write(conn_handle, attr_handle,
+                                ctxt->om, 0,
+                                sizeof gatt_svr_static_read_val,
+                                &gatt_svr_static_read_val, NULL);
+        MODLOG_DFLT(DEBUG, "received val = %s", gatt_svr_static_read_val);
+        return rc;
     }
+    else if (ctxt->op == BLE_GATT_ACCESS_OP_READ_CHR) 
+    {
+        gatt_svr_static_read_val[0] = rand();
+        rc = os_mbuf_append(ctxt->om, &gatt_svr_static_read_val,
+                            sizeof gatt_svr_static_read_val);
+        return rc == 0 ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
+    }
+
     return 0;
 }
 
