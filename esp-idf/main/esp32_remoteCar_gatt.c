@@ -6,8 +6,7 @@
 #include "esp32_remoteCar_inf.h"
 #include "esp32_remoteCar_priv.h"
 
-static uint8_t gatt_svr_static_read_val[500];
-static uint8_t gatt_svr_static_write_val[500];
+static uint8_t gatt_svr_static_val[500];
 
 /**
  * Utility function to log an array of bytes.
@@ -36,20 +35,22 @@ gatt_svr_chr_write(uint16_t conn_handle, uint16_t attr_handle,
 /* Callback function for custom service */
 static int  ble_svc_gatt_handler(uint16_t conn_handle, uint16_t attr_handle, struct ble_gatt_access_ctxt *ctxt, void *arg)
 {
+    static int rc;
+
     if (ctxt->op == BLE_GATT_ACCESS_OP_WRITE_CHR) 
     {
         rc = gatt_svr_chr_write(conn_handle, attr_handle,
                                 ctxt->om, 0,
-                                sizeof gatt_svr_static_read_val,
-                                &gatt_svr_static_read_val, NULL);
-        MODLOG_DFLT(DEBUG, "received val = %s", gatt_svr_static_read_val);
+                                sizeof gatt_svr_static_val,
+                                &gatt_svr_static_val, NULL);
+        MODLOG_DFLT(DEBUG, "received val = %s", gatt_svr_static_val);
         return rc;
     }
     else if (ctxt->op == BLE_GATT_ACCESS_OP_READ_CHR) 
     {
-        gatt_svr_static_read_val[0] = rand();
-        rc = os_mbuf_append(ctxt->om, &gatt_svr_static_read_val,
-                            sizeof gatt_svr_static_read_val);
+        gatt_svr_static_val[0] = rand();
+        rc = os_mbuf_append(ctxt->om, &gatt_svr_static_val,
+                            sizeof gatt_svr_static_val);
         return rc == 0 ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
     }
 
