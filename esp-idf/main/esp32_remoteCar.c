@@ -9,7 +9,8 @@
 
 /******************* Variable declaration/ definition ********************/
 bool conn_handle_subs[CONFIG_BT_NIMBLE_MAX_CONNECTIONS + 1];
-uint16_t ble_spp_svc_gatt_read_val_handle;
+uint16_t ble_spp_svc_gatt_receive_val_handle;
+uint16_t ble_spp_svc_gatt_transmit_val_handle;
 
 QueueHandle_t spp_common_uart_queue = NULL;
 
@@ -39,7 +40,7 @@ void ble_server_uart_task(void *pvParameters)
                         if (conn_handle_subs[i]) {
                             struct os_mbuf *txom;
                             txom = ble_hs_mbuf_from_flat(ntf, event.size);
-                            rc = ble_gatts_notify_custom(i, ble_spp_svc_gatt_read_val_handle,
+                            rc = ble_gatts_notify_custom(i, ble_spp_svc_gatt_receive_val_handle,
                                                          txom);
                             if (rc == 0) {
                                 MODLOG_DFLT(INFO, "Notification sent successfully");

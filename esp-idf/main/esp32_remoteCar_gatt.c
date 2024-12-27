@@ -32,13 +32,22 @@ const struct ble_gatt_svc_def new_ble_svc_gatt_defs[] = {
         .type = BLE_GATT_SVC_TYPE_PRIMARY,
         .uuid = BLE_UUID128_DECLARE(BLE_SVC_SPP_UUID128),
         .characteristics = (struct ble_gatt_chr_def[])
-        { {
+        { 
+            {
                 /* Support SPP service */
-                .uuid = BLE_UUID128_DECLARE(BLE_SVC_SPP_CHR_UUID128),
+                .uuid = BLE_UUID128_DECLARE(BLE_SVC_SPP_CHR_RX_UUID128),
                 .access_cb = ble_svc_gatt_handler,
-                .val_handle = &ble_spp_svc_gatt_read_val_handle,
-                .flags = BLE_GATT_CHR_F_READ | BLE_GATT_CHR_F_WRITE | BLE_GATT_CHR_F_NOTIFY,
-            }, {
+                .val_handle = &ble_spp_svc_gatt_receive_val_handle,
+                .flags = BLE_GATT_CHR_F_WRITE,
+            }, 
+            {
+                /* Support SPP service */
+                .uuid = BLE_UUID128_DECLARE(BLE_SVC_SPP_CHR_TX_UUID128),
+                .access_cb = ble_svc_gatt_handler,
+                .val_handle = &ble_spp_svc_gatt_transmit_val_handle,
+                .flags = BLE_GATT_CHR_F_NOTIFY,
+            }, 
+            {
                 0, /* No more characteristics */
             }
         },
