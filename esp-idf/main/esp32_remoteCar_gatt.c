@@ -6,8 +6,6 @@
 #include "esp32_remoteCar_inf.h"
 #include "esp32_remoteCar_priv.h"
 
-static uint16_t ble_spp_svc_gatt_read_val_handle;
-
 /* Callback function for custom service */
 static int  ble_svc_gatt_handler(uint16_t conn_handle, uint16_t attr_handle, struct ble_gatt_access_ctxt *ctxt, void *arg)
 {

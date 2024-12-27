@@ -3,16 +3,26 @@
  *
  * SPDX-License-Identifier: Unlicense OR CC0-1.0
  */
-
 #include "esp32_remoteCar_inf.h"
 #include "esp32_remoteCar_priv.h"
 
+/******************* Variable declaration/ definition ********************/
+static uint8_t own_addr_type;
+/* Ref @ https://github.com/espressif/esp-idf/issues/9798 */
+static uint8_t ext_adv_pattern_1[] = {
+    0x02, 0x01, 0x06,
+    0x03, 0x03, 0xab, 0xcd,
+    0x03, 0x03, 0x18, 0x11,
+    0x11, 0X09, 'n', 'i', 'm', 'b', 'l', 'e', '-', 'b', 'l', 'e', 'p', 'r', 'p', 'h', '-', 'e',
+};
+
+/******************* Function definition ********************/
 /**
  * Enables advertising with the following parameters:
  *     o General discoverable mode.
  *     o Undirected connectable mode.
  */
-static void ble_spp_server_advertise(void)
+void ble_spp_server_advertise(void)
 {
     struct ble_gap_ext_adv_params params;
     struct os_mbuf *data;

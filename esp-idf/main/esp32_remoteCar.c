@@ -8,15 +8,8 @@
 #include "esp32_remoteCar_priv.h"
 
 /******************* Variable declaration/ definition ********************/
-/* Ref @ https://github.com/espressif/esp-idf/issues/9798 */
-static uint8_t ext_adv_pattern_1[] = {
-    0x02, 0x01, 0x06,
-    0x03, 0x03, 0xab, 0xcd,
-    0x03, 0x03, 0x18, 0x11,
-    0x11, 0X09, 'n', 'i', 'm', 'b', 'l', 'e', '-', 'b', 'l', 'e', 'p', 'r', 'p', 'h', '-', 'e',
-};
-static uint8_t own_addr_type;
-static bool conn_handle_subs[CONFIG_BT_NIMBLE_MAX_CONNECTIONS + 1];
+bool conn_handle_subs[CONFIG_BT_NIMBLE_MAX_CONNECTIONS + 1];
+uint16_t ble_spp_svc_gatt_read_val_handle;
 
 QueueHandle_t spp_common_uart_queue = NULL;
 
