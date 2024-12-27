@@ -22,7 +22,6 @@ QueueHandle_t spp_common_uart_queue = NULL;
 
 /******************* Function declaration ********************/
 static int ble_spp_server_gap_event(struct ble_gap_event *event, void *arg);
-int gatt_svr_register(void);
 void ble_store_config_init(void);
 
 /******************* Function definition ********************/
@@ -317,26 +316,6 @@ gatt_svr_register_cb(struct ble_gatt_register_ctxt *ctxt, void *arg)
     }
 }
 
-int gatt_svr_init(void)
-{
-    int rc = 0;
-    ble_svc_gap_init();
-    ble_svc_gatt_init();
-
-    rc = ble_gatts_count_cfg(new_ble_svc_gatt_defs);
-
-    if (rc != 0) {
-        return rc;
-    }
-
-    rc = ble_gatts_add_svcs(new_ble_svc_gatt_defs);
-    if (rc != 0) {
-        return rc;
-    }
-
-    return 0;
-}
-
 void ble_server_uart_task(void *pvParameters)
 {
     MODLOG_DFLT(INFO, "BLE server UART_task started\n");
@@ -379,9 +358,40 @@ void ble_server_uart_task(void *pvParameters)
     }
     vTaskDelete(NULL);
 }
-static void ble_spp_uart_init(void)
+
+static void esp32_remoteCar_Init()
 {
-    uart_config_t uart_config = {
+    int rc;
+    esp_err_t ret;
+
+    /* Initialize NVS — it is used to store PHY calibration data */
+    ret = nvs_flash_init();
+
+    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) 
+    {
+        ret = nvs_flash_erase();
+        ESP_ERROR_CHECK(ret);
+
+        ret = nvs_flash_init();
+        ESP_ERROR_CHECK(ret);
+    }
+
+    ret = nimble_port_init();
+    if (ret != ESP_OK) 
+    {
+        MODLOG_DFLT(ERROR, "Failed to init nimble %d \n", ret);
+        return;
+    }
+
+    /* Initialize connection_handle array */
+    for (int i = 0; i <= CONFIG_BT_NIMBLE_MAX_CONNECTIONS; i++) 
+    {
+        conn_handle_subs[i] = false;
+    }
+
+    /* Initialize uart driver and start uart task */
+    uart_config_t uart_config = 
+    {
         .baud_rate = 115200,
         .data_bits = UART_DATA_8_BITS,
         .parity = UART_PARITY_DISABLE,
@@ -397,35 +407,6 @@ static void ble_spp_uart_init(void)
     //Set UART pins
     uart_set_pin(UART_NUM_0, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
     xTaskCreate(ble_server_uart_task, "uTask", 4096, (void *)UART_NUM_0, 8, NULL);
-}
-
-
-void
-app_main(void)
-{
-    int rc;
-
-    /* Initialize NVS — it is used to store PHY calibration data */
-    esp_err_t ret = nvs_flash_init();
-    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
-        ESP_ERROR_CHECK(nvs_flash_erase());
-        ret = nvs_flash_init();
-    }
-    ESP_ERROR_CHECK(ret);
-
-    ret = nimble_port_init();
-    if (ret != ESP_OK) {
-        MODLOG_DFLT(ERROR, "Failed to init nimble %d \n", ret);
-        return;
-    }
-
-    /* Initialize connection_handle array */
-    for (int i = 0; i <= CONFIG_BT_NIMBLE_MAX_CONNECTIONS; i++) {
-        conn_handle_subs[i] = false;
-    }
-
-    /* Initialize uart driver and start uart task */
-    ble_spp_uart_init();
 
     /* Initialize the NimBLE host configuration. */
     ble_hs_cfg.reset_cb = ble_spp_server_on_reset;
@@ -451,7 +432,13 @@ app_main(void)
 #endif
 
     /* Register custom service */
-    rc = gatt_svr_init();
+    ble_svc_gap_init();
+    ble_svc_gatt_init();
+
+    rc = ble_gatts_count_cfg(new_ble_svc_gatt_defs);
+    assert(rc == 0);
+
+    rc = ble_gatts_add_svcs(new_ble_svc_gatt_defs);
     assert(rc == 0);
 
     /* Set the default device name. */
@@ -462,4 +449,10 @@ app_main(void)
     ble_store_config_init();
 
     nimble_port_freertos_init(ble_spp_server_host_task);
+}
+
+void
+app_main(void)
+{
+    esp32_remoteCar_Init();
 }
