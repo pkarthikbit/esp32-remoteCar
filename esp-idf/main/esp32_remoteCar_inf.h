@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: 2021-2022 Espressif Systems (Shanghai) CO LTD
+ * SPDX-FileCopyrightText: Karthik Palanisamy
  *
  * SPDX-License-Identifier: Unlicense OR CC0-1.0
  */
@@ -28,5 +28,8 @@
 #include "console/console.h"
 #include "services/gap/ble_svc_gap.h"
 #include "services/gatt/ble_svc_gatt.h"
+
+/* Public inclusion */
+#include "esp32_remoteCar_pub.h"
 
 #endif /* ESP32_REMOTECAR_INF_H */
