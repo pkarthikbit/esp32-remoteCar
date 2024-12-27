@@ -12,19 +12,19 @@
 /* Callback function for custom service */
 static int  ble_svc_gatt_handler(uint16_t conn_handle, uint16_t attr_handle, struct ble_gatt_access_ctxt *ctxt, void *arg)
 {
-    switch (ctxt->op) {
-    case BLE_GATT_ACCESS_OP_READ_CHR:
-        MODLOG_DFLT(INFO, "Callback for read");
-        break;
+    switch (ctxt->op) 
+    {
+        case BLE_GATT_ACCESS_OP_READ_CHR:
+            return read_value(conn_handle, attr_handle,
+                        ctxt, arg);
 
-    case BLE_GATT_ACCESS_OP_WRITE_CHR:
-        MODLOG_DFLT(INFO, "Data received in write event,ble_gatt_access_ctxt");
-        print_mbuf(ctxt->om);
-        break;
+        case BLE_GATT_ACCESS_OP_WRITE_CHR:
+            return write_value(conn_handle, attr_handle,
+                            ctxt, arg);
 
-    default:
-        MODLOG_DFLT(INFO, "\nDefault Callback");
-        break;
+        default:
+            MODLOG_DFLT(INFO, "\nDefault Callback");
+            break;
     }
     return 0;
 }
