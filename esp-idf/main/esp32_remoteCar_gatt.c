@@ -9,31 +9,6 @@
 /**
  * Utility function to log an array of bytes.
  */
-void print_bytes(const uint8_t *bytes, int len)
-{
-    int i;
-
-    for (i = 0; i < len; i++) {
-        MODLOG_DFLT(DEBUG, "%s0x%02x", i != 0 ? ":" : "", bytes[i]);
-    }
-}
-
-void print_mbuf(const struct os_mbuf *om)
-{
-    int colon;
-
-    colon = 0;
-    while (om != NULL) {
-        if (colon) {
-            MODLOG_DFLT(DEBUG, ":");
-        } else {
-            colon = 1;
-        }
-        print_bytes(om->om_data, om->om_len);
-        om = SLIST_NEXT(om, om_next);
-    }
-}
-
 /* Callback function for custom service */
 static int  ble_svc_gatt_handler(uint16_t conn_handle, uint16_t attr_handle, struct ble_gatt_access_ctxt *ctxt, void *arg)
 {
