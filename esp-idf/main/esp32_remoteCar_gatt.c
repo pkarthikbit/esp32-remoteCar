@@ -58,6 +58,10 @@ static int  ble_svc_gatt_handler(uint16_t conn_handle, uint16_t attr_handle, str
 {
     static int rc;
     uint16_t act_len;
+    uint16_t angle;
+    uint8_t radius;
+    float x_value;
+    float y_value;
 
     if (ctxt->op == BLE_GATT_ACCESS_OP_WRITE_CHR) 
     {
@@ -96,10 +100,10 @@ static int  ble_svc_gatt_handler(uint16_t conn_handle, uint16_t attr_handle, str
 
             case GAMEPAD_ANALOG:
                 {
-                    uint16_t angle =((gatt_svr_static_val[6] >> 3)*15);
-                    uint8_t radius = gatt_svr_static_val[6] & 0x07;
-                    float x_value = float(radius*(float(cos(float(angle*PI/180)))));
-                    float y_value = float(radius*(float(sin(float(angle*PI/180)))));
+                    angle =((gatt_svr_static_val[6] >> 3)*15);
+                    radius = gatt_svr_static_val[6] & 0x07;
+                    x_value = (float)(radius*((float)(cos((float)(angle*PI/180)))));
+                    y_value = (float)(radius*((float)(sin((float)(angle*PI/180)))));
 
                     MODLOG_DFLT(INFO, "x=%f, y=%f", x_value, y_value);
                 }

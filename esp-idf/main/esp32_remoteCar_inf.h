@@ -9,6 +9,7 @@
 
 /* STD */
 #include <stdbool.h>
+#include <math.h>
 
 /* ESP32 Generic */
 #include "esp_peripheral.h"
