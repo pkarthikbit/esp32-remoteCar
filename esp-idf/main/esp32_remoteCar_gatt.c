@@ -73,45 +73,42 @@ static int  ble_svc_gatt_handler(uint16_t conn_handle, uint16_t attr_handle, str
         switch(gatt_svr_static_val[2])
         {
             case GAMEPAD_DIGITAL:
+            {
+                switch(gatt_svr_static_val[6])
                 {
-                    switch(gatt_svr_static_val[6])
-                    {
-                        case UP_KEY:
-                            MODLOG_DFLT(INFO, "UP_KEY");
-                            break;
+                    case UP_KEY:
+                        MODLOG_DFLT(INFO, "UP_KEY");
+                        break;
 
-                        case DOWN_KEY:
-                            MODLOG_DFLT(INFO, "DOWN_KEY");
-                            break;
+                    case DOWN_KEY:
+                        MODLOG_DFLT(INFO, "DOWN_KEY");
+                        break;
 
-                        case LEFT_KEY:
-                            MODLOG_DFLT(INFO, "LEFT_KEY");
-                            break;
+                    case LEFT_KEY:
+                        MODLOG_DFLT(INFO, "LEFT_KEY");
+                        break;
 
-                        case RIGHT_KEY:
-                            MODLOG_DFLT(INFO, "RIGHT_KEY");
-                            break;
+                    case RIGHT_KEY:
+                        MODLOG_DFLT(INFO, "RIGHT_KEY");
+                        break;
 
-                        default:
-                            break;
-                    }
+                    default:
+                        break;
                 }
-                break;
+            }
+            break;
 
             case GAMEPAD_ANALOG:
-                {
-                    angle =((gatt_svr_static_val[6] >> 3)*15);
-                    radius = gatt_svr_static_val[6] & 0x07;
-                    x_value = (float)(radius*((float)(cos((float)(angle*PI/180)))));
-                    y_value = (float)(radius*((float)(sin((float)(angle*PI/180)))));
-
-                    MODLOG_DFLT(INFO, "x=%f, y=%f", x_value, y_value);
-                }
-                break;
-
             case GAMEPAD_ACCL:
-                MODLOG_DFLT(INFO, "GAMEPAD_ACCL");
-                break;
+            {
+                angle =((gatt_svr_static_val[6] >> 3)*15);
+                radius = gatt_svr_static_val[6] & 0x07;
+                x_value = (float)(radius*((float)(cos((float)(angle*PI/180)))));
+                y_value = (float)(radius*((float)(sin((float)(angle*PI/180)))));
+
+                MODLOG_DFLT(INFO, "x=%f, y=%f", x_value, y_value);
+            }
+            break;
 
             default:
                 break;
