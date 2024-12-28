@@ -8,12 +8,12 @@
 
 /******************* Variable declaration/ definition ********************/
 static uint8_t own_addr_type;
-/* Ref @ https://github.com/espressif/esp-idf/issues/9798 */
+/* Ref @ https://github.com/espressif/esp-idf/issues/9798 
+ * spec @ https://www.bluetooth.com/specifications/assigned-numbers/ Chapter2.3*/
 uint8_t ext_adv_pattern_1[] = {
     0x02, 0x01, 0x06,
-    0x03, 0x03, 0xab, 0xcd,
-    0x03, 0x03, 0x18, 0x11,
-    0x11, 0x09, 'n', 'i', 'm', 'b', 'l', 'e', '-', 'b', 'l', 'e', 'p', 'r', 'p', 'h', '-', 'e',
+    0x03, 0x03, 0x00, 0x01,
+    0x12, 0x09, 'S', 'u', 'g', 'a', 'n', 't', 'h', '_', 'r', 'e', 'm', 'o', 't', 'e', 'C', 'a', 'r',
 };
 
 /******************* Function definition ********************/

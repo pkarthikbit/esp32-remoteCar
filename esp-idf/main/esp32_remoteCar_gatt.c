@@ -14,18 +14,18 @@ static uint8_t gatt_svr_static_val[50];
 #define GAMEPAD_ACCL    0x03
 
 //Byte 5
-#define START_KEY       1
-#define SELECT_KEY      2
-#define TRIANGLE_KEY    4 
-#define CIRCLE_KEY      8
-#define CROSS_KEY       10
-#define SQUARE_KEY      20
+#define START_KEY       0x1
+#define SELECT_KEY      0x2
+#define TRIANGLE_KEY    0x4 
+#define CIRCLE_KEY      0x8
+#define CROSS_KEY       0x10
+#define SQUARE_KEY      0x20
 
 //Byte 6 in case of Digital Mode GamePad
-#define UP_KEY          1
-#define DOWN_KEY        2
-#define LEFT_KEY        4
-#define RIGHT_KEY       8
+#define UP_KEY          0x1
+#define DOWN_KEY        0x2
+#define LEFT_KEY        0x4
+#define RIGHT_KEY       0x8
 
 /**
  * Utility function to log an array of bytes.
@@ -64,18 +64,18 @@ static int  ble_svc_gatt_handler(uint16_t conn_handle, uint16_t attr_handle, str
                                 sizeof gatt_svr_static_val,
                                 &gatt_svr_static_val, &act_len);
         
-        switch(gatt_svr_static_val[2]):
+        switch(gatt_svr_static_val[2])
         {
             case GAMEPAD_DIGITAL:
-                MODLOG_DFLT(INFO, "\nGAMEPAD_DIGITAL  ");
+                MODLOG_DFLT(INFO, "GAMEPAD_DIGITAL");
                 break;
 
             case GAMEPAD_ANALOG:
-                MODLOG_DFLT(INFO, "\nGAMEPAD_ANALOG  ");
+                MODLOG_DFLT(INFO, "GAMEPAD_ANALOG");
                 break;
 
             case GAMEPAD_ACCL:
-                MODLOG_DFLT(INFO, "\nGAMEPAD_ACCL  ");
+                MODLOG_DFLT(INFO, "GAMEPAD_ACCL");
                 break;
 
             default:
@@ -83,60 +83,58 @@ static int  ble_svc_gatt_handler(uint16_t conn_handle, uint16_t attr_handle, str
 
         }
 
-        switch(gatt_svr_static_val[5]):
+        switch(gatt_svr_static_val[5])
         {
             case START_KEY:
-                MODLOG_DFLT(INFO, "START_KEY  ");
+                MODLOG_DFLT(INFO, "START_KEY");
                 break;
 
             case SELECT_KEY:
-                MODLOG_DFLT(INFO, "SELECT_KEY  ");
+                MODLOG_DFLT(INFO, "SELECT_KEY");
                 break;
 
             case TRIANGLE_KEY:
-                MODLOG_DFLT(INFO, "TRIANGLE_KEY  ");
+                MODLOG_DFLT(INFO, "TRIANGLE_KEY");
                 break;
 
             case CIRCLE_KEY:
-                MODLOG_DFLT(INFO, "CIRCLE_KEY  ");
+                MODLOG_DFLT(INFO, "CIRCLE_KEY");
                 break;
 
             case CROSS_KEY:
-                MODLOG_DFLT(INFO, "CROSS_KEY  ");
+                MODLOG_DFLT(INFO, "CROSS_KEY");
                 break;    
 
             case SQUARE_KEY:
-                MODLOG_DFLT(INFO, "SQUARE_KEY  ");
+                MODLOG_DFLT(INFO, "SQUARE_KEY");
                 break;  
 
             default:
                 break;      
         }
 
-        switch(gatt_svr_static_val[6]):
+        switch(gatt_svr_static_val[6])
         {
             case UP_KEY:
-                MODLOG_DFLT(INFO, "UP_KEY  ");
+                MODLOG_DFLT(INFO, "UP_KEY");
                 break;
 
             case DOWN_KEY:
-                MODLOG_DFLT(INFO, "DOWN_KEY  ");
+                MODLOG_DFLT(INFO, "DOWN_KEY");
                 break;
 
             case LEFT_KEY:
-                MODLOG_DFLT(INFO, "LEFT_KEY  ");
+                MODLOG_DFLT(INFO, "LEFT_KEY");
                 break;
 
             case RIGHT_KEY:
-                MODLOG_DFLT(INFO, "RIGHT_KEY  ");
+                MODLOG_DFLT(INFO, "RIGHT_KEY");
                 break;
 
             default:
                 break;
         }
-
-        MODLOG_DFLT(INFO, "\n");
-        
+       
         return rc;
     }
     else if (ctxt->op == BLE_GATT_ACCESS_OP_READ_CHR) 
