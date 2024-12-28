@@ -1,0 +1,64 @@
+@startuml
+
+package "ESP32"{
+component [GPIO18(pin23)]
+component [GPIO20(pin25)]
+component [GPIO19(pin24)]
+component [GPIO17(pin22)]
+
+component [GPIO21(pin26)]
+component [GPIO22(pin27)]
+component [GPIO23(pin28)]
+component [GPIO16(pin21)]
+}
+
+package "DRV8833_1"{
+component [IN1_1]
+component [IN2_1]
+component [IN3_1]
+component [IN4_1]
+component [OUT1_1]
+component [OUT2_1]
+component [OUT3_1]
+component [OUT4_1]
+}
+
+package "DRV8833_2"{
+component [IN1_2]
+component [IN2_2]
+component [IN3_2]
+component [IN4_2]
+component [OUT1_2]
+component [OUT2_2]
+component [OUT3_2]
+component [OUT4_2]
+}
+
+package "Motor"{
+component [Front_Left]
+component [Front_Right]
+component [Rear_Left]
+component [Rear_Right]
+}
+
+'----------Connections------------
+[GPIO18(pin23)] --> [IN1_1]
+[GPIO20(pin25)] --> [IN2_1]
+[GPIO19(pin24)] --> [IN3_1]
+[GPIO17(pin22)] --> [IN4_1]
+
+[OUT1_1] ..> [Front_Left]
+[OUT2_1] ..> [Front_Left]
+[OUT3_1] ..> [Front_Right]
+[OUT4_1] ..> [Front_Right]
+
+[GPIO21(pin26)] -> [IN1_2]
+[GPIO22(pin27)] -> [IN2_2]
+[GPIO23(pin28)] -> [IN3_2]
+[GPIO16(pin21)] -> [IN4_2]
+
+[OUT1_2] ..> [Rear_Left]
+[OUT2_2] ..> [Rear_Left]
+[OUT3_2] ..> [Rear_Right]
+[OUT4_2] ..> [Rear_Right]
+@enduml
