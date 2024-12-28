@@ -18,6 +18,7 @@
 
 /* ESP32 Driver */
 #include "driver/uart.h"
+#include "driver/gpio.h"
 #include "modlog/modlog.h"
 
 /* BLE */

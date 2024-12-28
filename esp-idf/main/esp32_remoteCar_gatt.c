@@ -78,6 +78,7 @@ static int  ble_svc_gatt_handler(uint16_t conn_handle, uint16_t attr_handle, str
                 {
                     case UP_KEY:
                         MODLOG_DFLT(INFO, "UP_KEY");
+                        gpio_set_level(GPIO_DRV8833_IN1_1, true);
                         break;
 
                     case DOWN_KEY:

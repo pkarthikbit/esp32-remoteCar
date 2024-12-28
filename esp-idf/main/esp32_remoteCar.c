@@ -74,6 +74,8 @@ static void esp32_remoteCar_Init()
 {
     int rc;
     esp_err_t ret;
+    //zero-initialize the config structure.
+    gpio_config_t io_conf = {};
 
     /* Initialize NVS — it is used to store PHY calibration data */
     ret = nvs_flash_init();
@@ -158,6 +160,20 @@ static void esp32_remoteCar_Init()
 
     /* XXX Need to have template for store */
     ble_store_config_init();
+
+    /* GPIO configuration */
+    //disable interrupt
+    io_conf.intr_type = GPIO_INTR_DISABLE;
+    //set as output mode
+    io_conf.mode = GPIO_MODE_OUTPUT;
+    //bit mask of the pins that you want to set
+    io_conf.pin_bit_mask = GPIO_OUTPUT_PIN_SEL;
+    //disable pull-down mode
+    io_conf.pull_down_en = 0;
+    //disable pull-up mode
+    io_conf.pull_up_en = 0;
+    //configure GPIO with the given settings
+    gpio_config(&io_conf);
 
     nimble_port_freertos_init(ble_spp_server_host_task);
 }
