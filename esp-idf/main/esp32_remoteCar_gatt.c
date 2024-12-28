@@ -8,6 +8,8 @@
 
 static uint8_t gatt_svr_static_val[50];
 
+#define PI 3.14159
+
 //Byte 2
 #define GAMEPAD_DIGITAL 0x01
 #define GAMEPAD_ANALOG  0x02
@@ -67,11 +69,40 @@ static int  ble_svc_gatt_handler(uint16_t conn_handle, uint16_t attr_handle, str
         switch(gatt_svr_static_val[2])
         {
             case GAMEPAD_DIGITAL:
-                MODLOG_DFLT(INFO, "GAMEPAD_DIGITAL");
+                {
+                    switch(gatt_svr_static_val[6])
+                    {
+                        case UP_KEY:
+                            MODLOG_DFLT(INFO, "UP_KEY");
+                            break;
+
+                        case DOWN_KEY:
+                            MODLOG_DFLT(INFO, "DOWN_KEY");
+                            break;
+
+                        case LEFT_KEY:
+                            MODLOG_DFLT(INFO, "LEFT_KEY");
+                            break;
+
+                        case RIGHT_KEY:
+                            MODLOG_DFLT(INFO, "RIGHT_KEY");
+                            break;
+
+                        default:
+                            break;
+                    }
+                }
                 break;
 
             case GAMEPAD_ANALOG:
-                MODLOG_DFLT(INFO, "GAMEPAD_ANALOG");
+                {
+                    uint16_t angle =((gatt_svr_static_val[6] >> 3)*15);
+                    uint8_t radius = gatt_svr_static_val[6] & 0x07;
+                    float x_value = float(radius*(float(cos(float(angle*PI/180)))));
+                    float y_value = float(radius*(float(sin(float(angle*PI/180)))));
+
+                    MODLOG_DFLT(INFO, "x=%f, y=%f", x_value, y_value);
+                }
                 break;
 
             case GAMEPAD_ACCL:
@@ -111,28 +142,6 @@ static int  ble_svc_gatt_handler(uint16_t conn_handle, uint16_t attr_handle, str
 
             default:
                 break;      
-        }
-
-        switch(gatt_svr_static_val[6])
-        {
-            case UP_KEY:
-                MODLOG_DFLT(INFO, "UP_KEY");
-                break;
-
-            case DOWN_KEY:
-                MODLOG_DFLT(INFO, "DOWN_KEY");
-                break;
-
-            case LEFT_KEY:
-                MODLOG_DFLT(INFO, "LEFT_KEY");
-                break;
-
-            case RIGHT_KEY:
-                MODLOG_DFLT(INFO, "RIGHT_KEY");
-                break;
-
-            default:
-                break;
         }
        
         return rc;
