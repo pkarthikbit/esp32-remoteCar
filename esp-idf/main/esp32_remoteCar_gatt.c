@@ -76,13 +76,38 @@ static int  ble_svc_gatt_handler(uint16_t conn_handle, uint16_t attr_handle, str
             {
                 switch(gatt_svr_static_val[6])
                 {
+                    /* 
+                     * IN1/IN3	IN2/IN4	Spinning Direction
+                     * Low(0)	Low(0)	Motor OFF
+                     * High(1)	Low(0)	Forward
+                     * Low(0)	High(1)	Reverse
+                     * High(1)	High(1)	Motor OFF
+                    */
+                    
                     case UP_KEY:
                         MODLOG_DFLT(INFO, "UP_KEY");
                         gpio_set_level(GPIO_DRV8833_IN1_1, true);
+                        gpio_set_level(GPIO_DRV8833_IN2_1, false);
+                        gpio_set_level(GPIO_DRV8833_IN3_1, true);
+                        gpio_set_level(GPIO_DRV8833_IN4_1, false);
+
+                        gpio_set_level(GPIO_DRV8833_IN1_2, true);
+                        gpio_set_level(GPIO_DRV8833_IN2_2, false);
+                        gpio_set_level(GPIO_DRV8833_IN3_2, true);
+                        gpio_set_level(GPIO_DRV8833_IN4_2, false);
                         break;
 
                     case DOWN_KEY:
                         MODLOG_DFLT(INFO, "DOWN_KEY");
+                        gpio_set_level(GPIO_DRV8833_IN1_1, false);
+                        gpio_set_level(GPIO_DRV8833_IN2_1, true);
+                        gpio_set_level(GPIO_DRV8833_IN3_1, false);
+                        gpio_set_level(GPIO_DRV8833_IN4_1, true);
+
+                        gpio_set_level(GPIO_DRV8833_IN1_2, false);
+                        gpio_set_level(GPIO_DRV8833_IN2_2, true);
+                        gpio_set_level(GPIO_DRV8833_IN3_2, false);
+                        gpio_set_level(GPIO_DRV8833_IN4_2, true);
                         break;
 
                     case LEFT_KEY:
@@ -94,6 +119,15 @@ static int  ble_svc_gatt_handler(uint16_t conn_handle, uint16_t attr_handle, str
                         break;
 
                     default:
+                        gpio_set_level(GPIO_DRV8833_IN1_1, false);
+                        gpio_set_level(GPIO_DRV8833_IN2_1, false);
+                        gpio_set_level(GPIO_DRV8833_IN3_1, false);
+                        gpio_set_level(GPIO_DRV8833_IN4_1, false);
+
+                        gpio_set_level(GPIO_DRV8833_IN1_2, false);
+                        gpio_set_level(GPIO_DRV8833_IN2_2, false);
+                        gpio_set_level(GPIO_DRV8833_IN3_2, false);
+                        gpio_set_level(GPIO_DRV8833_IN4_2, false);
                         break;
                 }
             }
