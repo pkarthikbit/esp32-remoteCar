@@ -88,6 +88,32 @@ static int  ble_svc_gatt_handler(uint16_t conn_handle, uint16_t attr_handle, str
                         MODLOG_DFLT(INFO, "UP_KEY");
                         gpio_set_level(GPIO_DRV8833_IN1_1, true);
                         gpio_set_level(GPIO_DRV8833_IN2_1, false);
+                        gpio_set_level(GPIO_DRV8833_IN3_1, false);
+                        gpio_set_level(GPIO_DRV8833_IN4_1, true);
+
+                        gpio_set_level(GPIO_DRV8833_IN1_2, true);
+                        gpio_set_level(GPIO_DRV8833_IN2_2, false);
+                        gpio_set_level(GPIO_DRV8833_IN3_2, false);
+                        gpio_set_level(GPIO_DRV8833_IN4_2, true);
+                        break;
+
+                    case DOWN_KEY:
+                        MODLOG_DFLT(INFO, "DOWN_KEY");
+                        gpio_set_level(GPIO_DRV8833_IN1_1, true);
+                        gpio_set_level(GPIO_DRV8833_IN2_1, false);
+                        gpio_set_level(GPIO_DRV8833_IN3_1, false);
+                        gpio_set_level(GPIO_DRV8833_IN4_1, true);
+
+                        gpio_set_level(GPIO_DRV8833_IN1_2, true);
+                        gpio_set_level(GPIO_DRV8833_IN2_2, false);
+                        gpio_set_level(GPIO_DRV8833_IN3_2, false);
+                        gpio_set_level(GPIO_DRV8833_IN4_2, true);
+                        break;
+
+                    case LEFT_KEY:
+                        MODLOG_DFLT(INFO, "LEFT_KEY");
+                        gpio_set_level(GPIO_DRV8833_IN1_1, true);
+                        gpio_set_level(GPIO_DRV8833_IN2_1, false);
                         gpio_set_level(GPIO_DRV8833_IN3_1, true);
                         gpio_set_level(GPIO_DRV8833_IN4_1, false);
 
@@ -97,8 +123,8 @@ static int  ble_svc_gatt_handler(uint16_t conn_handle, uint16_t attr_handle, str
                         gpio_set_level(GPIO_DRV8833_IN4_2, false);
                         break;
 
-                    case DOWN_KEY:
-                        MODLOG_DFLT(INFO, "DOWN_KEY");
+                    case RIGHT_KEY:
+                        MODLOG_DFLT(INFO, "RIGHT_KEY");
                         gpio_set_level(GPIO_DRV8833_IN1_1, false);
                         gpio_set_level(GPIO_DRV8833_IN2_1, true);
                         gpio_set_level(GPIO_DRV8833_IN3_1, false);
@@ -108,14 +134,6 @@ static int  ble_svc_gatt_handler(uint16_t conn_handle, uint16_t attr_handle, str
                         gpio_set_level(GPIO_DRV8833_IN2_2, true);
                         gpio_set_level(GPIO_DRV8833_IN3_2, false);
                         gpio_set_level(GPIO_DRV8833_IN4_2, true);
-                        break;
-
-                    case LEFT_KEY:
-                        MODLOG_DFLT(INFO, "LEFT_KEY");
-                        break;
-
-                    case RIGHT_KEY:
-                        MODLOG_DFLT(INFO, "RIGHT_KEY");
                         break;
 
                     default:
