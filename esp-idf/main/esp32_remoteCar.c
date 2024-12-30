@@ -127,7 +127,7 @@ static void esp32_remoteCar_Init()
     ble_hs_cfg.gatts_register_cb = gatt_svr_register_cb;
     ble_hs_cfg.store_status_cb = ble_store_util_status_rr;
 
-    ble_hs_cfg.sm_io_cap = CONFIG_EXAMPLE_IO_TYPE;
+    ble_hs_cfg.sm_io_cap = CONFIG_EXAMPLE_IO_TYPE;        //default value 3
 #ifdef CONFIG_EXAMPLE_BONDING
     ble_hs_cfg.sm_bonding = 1;
 #endif
