@@ -40,17 +40,19 @@ gatt_svr_chr_write(uint16_t conn_handle, uint16_t attr_handle,
     uint16_t om_len;
     int rc;
 
+    rc = 0;
+
     om_len = OS_MBUF_PKTLEN(om);
     if (om_len < min_len || om_len > max_len) {
-        return BLE_ATT_ERR_INVALID_ATTR_VALUE_LEN;
+        rc = BLE_ATT_ERR_INVALID_ATTR_VALUE_LEN;
     }
 
     rc = ble_hs_mbuf_to_flat(om, dst, max_len, len);
     if (rc != 0) {
-        return BLE_ATT_ERR_UNLIKELY;
+        rc = BLE_ATT_ERR_UNLIKELY;
     }
 
-    return 0;
+    return rc;
 }
 
 /* Callback function for custom service */
@@ -85,7 +87,7 @@ static int  ble_svc_gatt_handler(uint16_t conn_handle, uint16_t attr_handle, str
                     */
                     
                     case UP_KEY:
-                        MODLOG_DFLT(INFO, "UP_KEY");
+                        //MODLOG_DFLT(INFO, "UP_KEY");
                         gpio_set_level(GPIO_DRV8833_IN1_1, false);
                         gpio_set_level(GPIO_DRV8833_IN2_1, true);
                         gpio_set_level(GPIO_DRV8833_IN3_1, true);
@@ -98,7 +100,7 @@ static int  ble_svc_gatt_handler(uint16_t conn_handle, uint16_t attr_handle, str
                         break;
 
                     case DOWN_KEY:
-                        MODLOG_DFLT(INFO, "DOWN_KEY");
+                        //MODLOG_DFLT(INFO, "DOWN_KEY");
                         gpio_set_level(GPIO_DRV8833_IN1_1, true);
                         gpio_set_level(GPIO_DRV8833_IN2_1, false);
                         gpio_set_level(GPIO_DRV8833_IN3_1, false);
@@ -111,7 +113,7 @@ static int  ble_svc_gatt_handler(uint16_t conn_handle, uint16_t attr_handle, str
                         break;
 
                     case LEFT_KEY:
-                        MODLOG_DFLT(INFO, "LEFT_KEY");
+                        //MODLOG_DFLT(INFO, "LEFT_KEY");
                         gpio_set_level(GPIO_DRV8833_IN1_1, true);
                         gpio_set_level(GPIO_DRV8833_IN2_1, false);
                         gpio_set_level(GPIO_DRV8833_IN3_1, true);
@@ -124,7 +126,7 @@ static int  ble_svc_gatt_handler(uint16_t conn_handle, uint16_t attr_handle, str
                         break;
 
                     case RIGHT_KEY:
-                        MODLOG_DFLT(INFO, "RIGHT_KEY");
+                        //MODLOG_DFLT(INFO, "RIGHT_KEY");
                         gpio_set_level(GPIO_DRV8833_IN1_1, false);
                         gpio_set_level(GPIO_DRV8833_IN2_1, true);
                         gpio_set_level(GPIO_DRV8833_IN3_1, false);
@@ -159,7 +161,7 @@ static int  ble_svc_gatt_handler(uint16_t conn_handle, uint16_t attr_handle, str
                 x_value = (float)(radius*((float)(cos((float)(angle*PI/180)))));
                 y_value = (float)(radius*((float)(sin((float)(angle*PI/180)))));
 
-                MODLOG_DFLT(INFO, "x=%f, y=%f", x_value, y_value);
+                //MODLOG_DFLT(INFO, "x=%f, y=%f", x_value, y_value);
             }
             break;
 
@@ -171,44 +173,42 @@ static int  ble_svc_gatt_handler(uint16_t conn_handle, uint16_t attr_handle, str
         switch(gatt_svr_static_val[5])
         {
             case START_KEY:
-                MODLOG_DFLT(INFO, "START_KEY");
+                //MODLOG_DFLT(INFO, "START_KEY");
                 break;
 
             case SELECT_KEY:
-                MODLOG_DFLT(INFO, "SELECT_KEY");
+                //MODLOG_DFLT(INFO, "SELECT_KEY");
                 break;
 
             case TRIANGLE_KEY:
-                MODLOG_DFLT(INFO, "TRIANGLE_KEY");
+                //MODLOG_DFLT(INFO, "TRIANGLE_KEY");
                 break;
 
             case CIRCLE_KEY:
-                MODLOG_DFLT(INFO, "CIRCLE_KEY");
+                //MODLOG_DFLT(INFO, "CIRCLE_KEY");
                 break;
 
             case CROSS_KEY:
-                MODLOG_DFLT(INFO, "CROSS_KEY");
+                //MODLOG_DFLT(INFO, "CROSS_KEY");
                 break;    
 
             case SQUARE_KEY:
-                MODLOG_DFLT(INFO, "SQUARE_KEY");
+                //MODLOG_DFLT(INFO, "SQUARE_KEY");
                 break;  
 
             default:
                 break;      
         }
-       
-        return rc;
     }
     else if (ctxt->op == BLE_GATT_ACCESS_OP_READ_CHR) 
     {
         gatt_svr_static_val[0] = rand();
         rc = os_mbuf_append(ctxt->om, &gatt_svr_static_val,
                             sizeof gatt_svr_static_val);
-        return rc == 0 ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
+        rc = 0 ? 0 : BLE_ATT_ERR_INSUFFICIENT_RES;
     }
 
-    return 0;
+    return rc;
 }
 
 /* Define new custom service */
