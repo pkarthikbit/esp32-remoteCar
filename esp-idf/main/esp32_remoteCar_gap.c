@@ -71,6 +71,8 @@ int ble_spp_server_gap_event(struct ble_gap_event *event, void *arg)
         }
         return 0;
 
+    /* `BLE_GAP_EVENT_DISCONNECT`: This case handles a disconnection event. 
+     * It prints disconnection details and resumes advertising. */
     case BLE_GAP_EVENT_DISCONNECT:
         MODLOG_DFLT(INFO, "disconnect; reason=%d ", event->disconnect.reason);
         ble_spp_server_print_conn_desc(&event->disconnect.conn);
@@ -82,6 +84,8 @@ int ble_spp_server_gap_event(struct ble_gap_event *event, void *arg)
         ble_spp_server_advertise();
         return 0;
 
+    /* `BLE_GAP_EVENT_CONN_UPDATE`: This case handles a connection parameter update event. 
+     * It prints the updated connection parameters. */
     case BLE_GAP_EVENT_CONN_UPDATE:
         /* The central has updated the connection parameters. */
         MODLOG_DFLT(INFO, "connection updated; status=%d ",
@@ -92,12 +96,16 @@ int ble_spp_server_gap_event(struct ble_gap_event *event, void *arg)
         MODLOG_DFLT(INFO, "\n");
         return 0;
 
+    /* `BLE_GAP_EVENT_ADV_COMPLETE`: This case handles the completion of advertising. 
+     * It resumes advertising when advertising completes. */
     case BLE_GAP_EVENT_ADV_COMPLETE:
         MODLOG_DFLT(INFO, "advertise complete; reason=%d",
                     event->adv_complete.reason);
         ble_spp_server_advertise();
         return 0;
 
+    /* `BLE_GAP_EVENT_MTU`: This case is activated when the Maximum Transmission Unit (MTU) is updated for a connection. 
+     * It prints the new MTU value and related information. */
     case BLE_GAP_EVENT_MTU:
         MODLOG_DFLT(INFO, "mtu update event; conn_handle=%d cid=%d mtu=%d\n",
                     event->mtu.conn_handle,
@@ -105,6 +113,8 @@ int ble_spp_server_gap_event(struct ble_gap_event *event, void *arg)
                     event->mtu.value);
         return 0;
 
+    /* `BLE_GAP_EVENT_SUBSCRIBE`: This case handles a subscription event. 
+     * It prints details about subscription changes. */
     case BLE_GAP_EVENT_SUBSCRIBE:
         MODLOG_DFLT(INFO, "subscribe event; conn_handle=%d attr_handle=%d "
                     "reason=%d prevn=%d curn=%d previ=%d curi=%d\n",

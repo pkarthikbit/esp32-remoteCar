@@ -34,6 +34,13 @@ void ble_spp_server_advertise(void)
         return;
     }
 
+    /**
+     *  Set the advertisement data included in our advertisements:
+     *     o Flags (indicates advertisement type and other general info).
+     *     o Advertising tx power.
+     *     o Device name.
+     *     o 128-bit service UUIDs (alert notifications).
+     */
     /* use defaults for non-set params */
     memset (&params, 0, sizeof(params));
 
@@ -104,6 +111,11 @@ void ble_spp_server_on_sync(void)
     ble_spp_server_advertise();
 }
 
+/* This function is invoked when various GATT (Generic Attribute Profile) elements, such as services, characteristics, or descriptors, are registered.
+ * 1. The function takes two parameters: `struct ble_gatt_register_ctxt *ctxt`, which represents context information about the registration operation, and `void *arg`, which is not used in this code snippet.
+ * 2. Inside the function, a switch statement is used to handle different GATT registration operations (`ctxt->op`). The possible operations include registering a service (`BLE_GATT_REGISTER_OP_SVC`), registering a characteristic (`BLE_GATT_REGISTER_OP_CHR`), and registering a descriptor (`BLE_GATT_REGISTER_OP_DSC`).
+ * 3. For each case, the code uses the `MODLOG_DFLT` macro to log debug information. The information logged includes the type of element being registered (service, characteristic, or descriptor) and its UUID in string format. Additionally, it logs specific details like handles associated with these elements. 
+ */
 void gatt_svr_register_cb(struct ble_gatt_register_ctxt *ctxt, void *arg)
 {
     char buf[BLE_UUID_STR_LEN];

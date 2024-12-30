@@ -7,7 +7,7 @@
 #ifndef ESP32_REMOTECAR_PRIV_H
 #define ESP32_REMOTECAR_PRIV_H
 
-/*
+/* Includes necessary headers and defines UUIDs for the SPP service and characteristic.
  * #define UUID_Service  "6E400001-B5A3-F393-E0A9-E50E24DCCA9E"
  * #define UUID_Transmit "6E400003-B5A3-F393-E0A9-E50E24DCCA9E"
  * #define UUID_Receive  "6E400002-B5A3-F393-E0A9-E50E24DCCA9E"

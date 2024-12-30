@@ -19,6 +19,8 @@ This reference design consists of two Demos, the BLE SPP server and BLE SPP clie
 
 These devices connect and exchange data wirelessly with each other. This capability creates a virtual serial link over the air. Each byte input can be sent and received by both the server and client. Espressif designed the BLE SPP applications to use the UART transport layer but you could adapt this design to work with other serial protocols, such as SPI.
 
+This module is a BLE Serial Port Profile (SPP) server using the NimBLE stack. BLE SPP enables wireless serial communication, making it valuable for IoT and embedded applications. It allows the ESP32 to communicate with other BLE devices, handling connection management, advertising, and data transmission. The code also defines a custom GATT service and initializes UART communication for data transfer.
+
 ### Initialization
 
 Both the server and client will first initialize the UART and BLE. The server demo will set up the serial port service with standard GATT and GAP services in the attribute server. The client demo will scan the BLE broadcast over the air to find the SPP server.

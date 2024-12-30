@@ -55,7 +55,13 @@ gatt_svr_chr_write(uint16_t conn_handle, uint16_t attr_handle,
     return rc;
 }
 
-/* Callback function for custom service */
+/* Callback function for custom service 
+ * This callback function `ble_svc_gatt_handler` is responsible for handling read and write operations on characteristics within the custom service. Here is a summary of what the code does:
+ * The function is defined with the following parameters:
+ * - `uint16_t conn_handle`: The connection handle for the BLE connection.
+ * - `uint16_t attr_handle`: The attribute handle associated with the operation.
+ * - `struct ble_gatt_access_ctxt *ctxt`: A context structure containing information about the GATT (Generic Attribute Profile) access operation.
+ * - `void *arg`: A generic argument pointer (not used in this code).*/
 static int  ble_svc_gatt_handler(uint16_t conn_handle, uint16_t attr_handle, struct ble_gatt_access_ctxt *ctxt, void *arg)
 {
     static int rc;
@@ -211,7 +217,16 @@ static int  ble_svc_gatt_handler(uint16_t conn_handle, uint16_t attr_handle, str
     return rc;
 }
 
-/* Define new custom service */
+/* Define new custom service 
+ * The provided code defines a custom service for BLE communication. Here is a summary of what this code does:
+ * 1. It defines a custom BLE service using the `ble_gatt_svc_def` structure.
+ * 2. This service is marked as a primary service using `BLE_GATT_SVC_TYPE_PRIMARY`. The UUID (Universally Unique Identifier) for the service is specified as `BLE_SVC_SPP_UUID128`.
+ * 3. Inside the service, there is a list of characteristics defined using the `ble_gatt_chr_def` structure. In this case, there's only one characteristic defined. The characteristic supports various operations, including reading, writing, and notifications. The UUID for the characteristic is specified as `BLE_SVC_SPP_CHR_UUID128`.
+ * 4. A callback function named `ble_svc_gatt_handler` is assigned to handle access to this characteristic.
+ * 5. The characteristic is set to support reading (`BLE_GATT_CHR_F_READ`), writing (`BLE_GATT_CHR_F_WRITE`), and notifications (`BLE_GATT_CHR_F_NOTIFY`).
+ * 6. The `val_handle` field is used to store the handle for reading the characteristic's value.
+ * In summary, this code defines a custom BLE service with one characteristic, and it specifies that this characteristic can be read, written to, and used for notifications. The UUIDs and callback functions for the service and characteristic are also specified.
+ */
 const struct ble_gatt_svc_def new_ble_svc_gatt_defs[] = {
     {
         /*** Service: SPP */

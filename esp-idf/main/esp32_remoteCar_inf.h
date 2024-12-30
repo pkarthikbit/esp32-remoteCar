@@ -23,11 +23,15 @@
 
 /* BLE */
 #include "nimble/ble.h"
+/* Includes the declaration of functions required for the initialization of the nimble stack. */
 #include "nimble/nimble_port.h"
+/* Initializes and enables nimble host task. */
 #include "nimble/nimble_port_freertos.h"
+/* Defines the functionalities to handle the host event. */
 #include "host/ble_hs.h"
 #include "host/util/util.h"
 #include "console/console.h"
+/* Defines the macros for device name, and device appearance and declares the function to set them. */
 #include "services/gap/ble_svc_gap.h"
 #include "services/gatt/ble_svc_gatt.h"
 
