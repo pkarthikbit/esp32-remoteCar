@@ -11,7 +11,7 @@
 └── kpl_monitor.sh      => shell file to monitor the printf. To exit the serial monitor, type ``Ctrl-]``.
 ```
 
-# BLE SPP peripheral example
+# esp32-remoteCar
 
 In Bluetooth classic (BR/EDR) systems, a Serial Port Profile (SPP) is an adopted profile defined by the Bluetooth Special Interest Group (SIG) used to emulate a serial port connection over a Bluetooth wireless connection. For BLE systems, an adopted SPP profile over BLE is not defined, thus emulation of a serial port must be implemented as a vendor-specific custom profile.
 
@@ -41,7 +41,7 @@ The client will be sending WriteNoRsp packets to the server. The server side sen
 
     The server will receive this data in the BLE_GATT_ACCESS_OP_WRITE_CHR event.
 
-### GATT Server Attribute Table
+### GATT Server Attribute Table (example)
 
 characteristic|UUID|Permissions
 :-:|:-:|:-:
@@ -53,8 +53,3 @@ SPP_STATUS_CHAR|0xABF4|READ & NOTIFY
 This example creates GATT server and advertises data, it then gets connected to a central device.
 
 It takes input from user and performs notify GATT operations against the specified peer.
-
-Note :
-
-* To install the dependency packages needed, please refer to the top level [README file](../../../../README.md#running-test-python-script-pytest).
-* Currently this Python utility is only supported on Linux (BLE communication is via BLuez + DBus).
