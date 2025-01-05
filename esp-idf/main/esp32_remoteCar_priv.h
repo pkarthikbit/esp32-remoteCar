@@ -34,7 +34,7 @@ struct ble_gatt_register_ctxt;
 /******************* preprocessor directives ********************/
 #define GPIO_DRV8833_IN1_1   GPIO_NUM_17 
 #define GPIO_DRV8833_IN2_1   GPIO_NUM_19
-#define GPIO_DRV8833_IN3_1   GPIO_NUM_20
+#define GPIO_DRV8833_IN3_1   GPIO_NUM_22
 #define GPIO_DRV8833_IN4_1   GPIO_NUM_18
 
 #define GPIO_DRV8833_IN1_2   GPIO_NUM_16 
