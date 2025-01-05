@@ -125,10 +125,10 @@ static int  ble_svc_gatt_handler(uint16_t conn_handle, uint16_t attr_handle, str
                         gpio_set_level(GPIO_DRV8833_IN3_1, true);
                         gpio_set_level(GPIO_DRV8833_IN4_1, false);
 
-                        gpio_set_level(GPIO_DRV8833_IN1_2, true);
-                        gpio_set_level(GPIO_DRV8833_IN2_2, false);
-                        gpio_set_level(GPIO_DRV8833_IN3_2, true);
-                        gpio_set_level(GPIO_DRV8833_IN4_2, false);
+                        gpio_set_level(GPIO_DRV8833_IN1_2, false);
+                        gpio_set_level(GPIO_DRV8833_IN2_2, true);
+                        gpio_set_level(GPIO_DRV8833_IN3_2, false);
+                        gpio_set_level(GPIO_DRV8833_IN4_2, true);
                         break;
 
                     case RIGHT_KEY:
