@@ -32,15 +32,15 @@ struct ble_hs_cfg;
 struct ble_gatt_register_ctxt;
 
 /******************* preprocessor directives ********************/
-#define GPIO_DRV8833_IN1_1   GPIO_NUM_18 
-#define GPIO_DRV8833_IN2_1   GPIO_NUM_20
-#define GPIO_DRV8833_IN3_1   GPIO_NUM_19
-#define GPIO_DRV8833_IN4_1   GPIO_NUM_17
+#define GPIO_DRV8833_IN1_1   GPIO_NUM_17 
+#define GPIO_DRV8833_IN2_1   GPIO_NUM_19
+#define GPIO_DRV8833_IN3_1   GPIO_NUM_20
+#define GPIO_DRV8833_IN4_1   GPIO_NUM_18
 
-#define GPIO_DRV8833_IN1_2   GPIO_NUM_21 
-#define GPIO_DRV8833_IN2_2   GPIO_NUM_22
-#define GPIO_DRV8833_IN3_2   GPIO_NUM_23
-#define GPIO_DRV8833_IN4_2   GPIO_NUM_16
+#define GPIO_DRV8833_IN1_2   GPIO_NUM_16 
+#define GPIO_DRV8833_IN2_2   GPIO_NUM_23
+#define GPIO_DRV8833_IN3_2   GPIO_NUM_2
+#define GPIO_DRV8833_IN4_2   GPIO_NUM_1
 
 #define GPIO_OUTPUT_PIN_SEL ((1ULL<<GPIO_DRV8833_IN1_1) |       \
                               (1ULL<<GPIO_DRV8833_IN2_1) |      \
