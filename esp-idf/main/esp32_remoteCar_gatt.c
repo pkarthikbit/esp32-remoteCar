@@ -120,7 +120,7 @@ static int  ble_svc_gatt_handler(uint16_t conn_handle, uint16_t attr_handle, str
 
                     case LEFT_KEY:
                         //MODLOG_DFLT(INFO, "LEFT_KEY");
-                        gpio_set_level(GPIO_DRV8833_IN1_1, true);
+                        gpio_set_level(GPIO_DRV8833_IN1_1, false);
                         gpio_set_level(GPIO_DRV8833_IN2_1, false);
                         gpio_set_level(GPIO_DRV8833_IN3_1, false);
                         gpio_set_level(GPIO_DRV8833_IN4_1, true);
@@ -136,7 +136,7 @@ static int  ble_svc_gatt_handler(uint16_t conn_handle, uint16_t attr_handle, str
                         gpio_set_level(GPIO_DRV8833_IN1_1, true);
                         gpio_set_level(GPIO_DRV8833_IN2_1, false);
                         gpio_set_level(GPIO_DRV8833_IN3_1, false);
-                        gpio_set_level(GPIO_DRV8833_IN4_1, true);
+                        gpio_set_level(GPIO_DRV8833_IN4_1, false);
 
                         gpio_set_level(GPIO_DRV8833_IN1_2, false);
                         gpio_set_level(GPIO_DRV8833_IN2_2, true);
