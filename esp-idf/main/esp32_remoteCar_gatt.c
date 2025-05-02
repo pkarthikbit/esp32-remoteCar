@@ -167,6 +167,9 @@ static int  ble_svc_gatt_handler(uint16_t conn_handle, uint16_t attr_handle, str
                 x_value = (float)(radius*((float)(cos((float)(angle*PI/180)))));
                 y_value = (float)(radius*((float)(sin((float)(angle*PI/180)))));
 
+                ESP_UNUSED(x_value);
+                ESP_UNUSED(y_value);
+
                 //MODLOG_DFLT(INFO, "x=%f, y=%f", x_value, y_value);
             }
             break;
