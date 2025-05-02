@@ -100,13 +100,12 @@ static void ble_spp_uart_init(void)
     uart_param_config(UART_NUM_0, &uart_config);
     //Set UART pins
     uart_set_pin(UART_NUM_0, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
-    xTaskCreate(ble_client_uart_task, "uTask", 4096, (void *)UART_NUM_0, 8, NULL);
+    xTaskCreate(ble_server_uart_task, "uTask", 4096, (void *)UART_NUM_0, 8, NULL);
 }
 
 static void esp32_remoteCar_Init()
 {
     int rc;
-    esp_err_t ret;
 
     //zero-initialize the config structure.
     gpio_config_t io_conf = {};
@@ -171,7 +170,15 @@ static void esp32_remoteCar_Init()
 #endif
 
     /* Register custom service */
-    rc = gatt_svr_init();
+    ble_svc_gap_init();
+    /* The gatt_svr_init function is called during the initialization phase of a BLE application 
+     * to set up the GATT server and define the services and characteristics it supports. */
+    ble_svc_gatt_init();
+
+    rc = ble_gatts_count_cfg(new_ble_svc_gatt_defs);
+    assert(rc == 0);
+
+    rc = ble_gatts_add_svcs(new_ble_svc_gatt_defs);
     assert(rc == 0);
 
     /* Set the default device name. */
