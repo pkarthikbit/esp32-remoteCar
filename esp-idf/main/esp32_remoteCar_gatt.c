@@ -6,6 +6,7 @@
 #include "esp32_remoteCar_inf.h"
 #include "esp32_remoteCar_priv.h"
 
+uint32_t LEDC_DUTY = 2048; // Set duty to 25%. (2 ** 13) * 50% = 4096, 25%=2048
 static uint8_t gatt_svr_static_val[50];
 
 #define PI 3.14159
@@ -94,68 +95,76 @@ static int  ble_svc_gatt_handler(uint16_t conn_handle, uint16_t attr_handle, str
                     
                     case UP_KEY:
                         //MODLOG_DFLT(INFO, "UP_KEY");
-                        gpio_set_level(GPIO_DRV8833_IN1_1, true);
-                        gpio_set_level(GPIO_DRV8833_IN2_1, false);
-                        gpio_set_level(GPIO_DRV8833_IN3_1, false);
-                        gpio_set_level(GPIO_DRV8833_IN4_1, true);
-
-                        gpio_set_level(GPIO_DRV8833_IN1_2, false);
-                        gpio_set_level(GPIO_DRV8833_IN2_2, true);
-                        gpio_set_level(GPIO_DRV8833_IN3_2, false);
-                        gpio_set_level(GPIO_DRV8833_IN4_2, true);
+                        ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, LEDC_CHANNEL_IN1_1, LEDC_DUTY));               
+                        ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, LEDC_CHANNEL_IN2_1, 0));
+                        ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, LEDC_CHANNEL_IN3_1, 0));
+                        ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, LEDC_CHANNEL_IN4_1, LEDC_DUTY));
+               
+                        ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, LEDC_CHANNEL_IN1_2, 0));
+                        ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, LEDC_CHANNEL_IN2_2, LEDC_DUTY));
+                        ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, LEDC_CHANNEL_IN3_2, 0));
+                        ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, LEDC_CHANNEL_IN4_2, LEDC_DUTY));
                         break;
 
                     case DOWN_KEY:
                         //MODLOG_DFLT(INFO, "DOWN_KEY");
-                        gpio_set_level(GPIO_DRV8833_IN1_1, false);
-                        gpio_set_level(GPIO_DRV8833_IN2_1, true);
-                        gpio_set_level(GPIO_DRV8833_IN3_1, true);
-                        gpio_set_level(GPIO_DRV8833_IN4_1, false);
-
-                        gpio_set_level(GPIO_DRV8833_IN1_2, true);
-                        gpio_set_level(GPIO_DRV8833_IN2_2, false);
-                        gpio_set_level(GPIO_DRV8833_IN3_2, true);
-                        gpio_set_level(GPIO_DRV8833_IN4_2, false);
+                        ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, LEDC_CHANNEL_IN1_1, 0));               
+                        ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, LEDC_CHANNEL_IN2_1, LEDC_DUTY));
+                        ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, LEDC_CHANNEL_IN3_1, LEDC_DUTY));
+                        ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, LEDC_CHANNEL_IN4_1, 0));
+               
+                        ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, LEDC_CHANNEL_IN1_2, LEDC_DUTY));
+                        ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, LEDC_CHANNEL_IN2_2, 0));
+                        ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, LEDC_CHANNEL_IN3_2, LEDC_DUTY));
+                        ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, LEDC_CHANNEL_IN4_2, 0));
                         break;
 
                     case LEFT_KEY:
                         //MODLOG_DFLT(INFO, "LEFT_KEY");
-                        gpio_set_level(GPIO_DRV8833_IN1_1, false);
-                        gpio_set_level(GPIO_DRV8833_IN2_1, false);
-                        gpio_set_level(GPIO_DRV8833_IN3_1, false);
-                        gpio_set_level(GPIO_DRV8833_IN4_1, true);
-
-                        gpio_set_level(GPIO_DRV8833_IN1_2, false);
-                        gpio_set_level(GPIO_DRV8833_IN2_2, false);
-                        gpio_set_level(GPIO_DRV8833_IN3_2, false);
-                        gpio_set_level(GPIO_DRV8833_IN4_2, true);
+                        ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, LEDC_CHANNEL_IN1_1, 0));               
+                        ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, LEDC_CHANNEL_IN2_1, 0));
+                        ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, LEDC_CHANNEL_IN3_1, 0));
+                        ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, LEDC_CHANNEL_IN4_1, LEDC_DUTY));
+               
+                        ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, LEDC_CHANNEL_IN1_2, 0));
+                        ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, LEDC_CHANNEL_IN2_2, 0));
+                        ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, LEDC_CHANNEL_IN3_2, 0));
+                        ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, LEDC_CHANNEL_IN4_2, LEDC_DUTY));
                         break;
 
                     case RIGHT_KEY:
                         //MODLOG_DFLT(INFO, "RIGHT_KEY");
-                        gpio_set_level(GPIO_DRV8833_IN1_1, true);
-                        gpio_set_level(GPIO_DRV8833_IN2_1, false);
-                        gpio_set_level(GPIO_DRV8833_IN3_1, false);
-                        gpio_set_level(GPIO_DRV8833_IN4_1, false);
-
-                        gpio_set_level(GPIO_DRV8833_IN1_2, false);
-                        gpio_set_level(GPIO_DRV8833_IN2_2, true);
-                        gpio_set_level(GPIO_DRV8833_IN3_2, false);
-                        gpio_set_level(GPIO_DRV8833_IN4_2, false);
+                        ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, LEDC_CHANNEL_IN1_1, LEDC_DUTY));               
+                        ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, LEDC_CHANNEL_IN2_1, 0));
+                        ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, LEDC_CHANNEL_IN3_1, 0));
+                        ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, LEDC_CHANNEL_IN4_1, 0));
+               
+                        ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, LEDC_CHANNEL_IN1_2, 0));
+                        ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, LEDC_CHANNEL_IN2_2, LEDC_DUTY));
+                        ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, LEDC_CHANNEL_IN3_2, 0));
+                        ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, LEDC_CHANNEL_IN4_2, 0));
                         break;
 
                     default:
-                        gpio_set_level(GPIO_DRV8833_IN1_1, false);
-                        gpio_set_level(GPIO_DRV8833_IN2_1, false);
-                        gpio_set_level(GPIO_DRV8833_IN3_1, false);
-                        gpio_set_level(GPIO_DRV8833_IN4_1, false);
-
-                        gpio_set_level(GPIO_DRV8833_IN1_2, false);
-                        gpio_set_level(GPIO_DRV8833_IN2_2, false);
-                        gpio_set_level(GPIO_DRV8833_IN3_2, false);
-                        gpio_set_level(GPIO_DRV8833_IN4_2, false);
+                        ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, LEDC_CHANNEL_IN1_1, 0));               
+                        ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, LEDC_CHANNEL_IN2_1, 0));
+                        ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, LEDC_CHANNEL_IN3_1, 0));
+                        ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, LEDC_CHANNEL_IN4_1, 0));
+            
+                        ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, LEDC_CHANNEL_IN1_2, 0));
+                        ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, LEDC_CHANNEL_IN2_2, 0));
+                        ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, LEDC_CHANNEL_IN3_2, 0));
+                        ESP_ERROR_CHECK(ledc_set_duty(LEDC_MODE, LEDC_CHANNEL_IN4_2, 0));
                         break;
                 }
+                ESP_ERROR_CHECK(ledc_update_duty(LEDC_MODE, LEDC_CHANNEL_IN1_1));
+                ESP_ERROR_CHECK(ledc_update_duty(LEDC_MODE, LEDC_CHANNEL_IN2_1));
+                ESP_ERROR_CHECK(ledc_update_duty(LEDC_MODE, LEDC_CHANNEL_IN3_1));
+                ESP_ERROR_CHECK(ledc_update_duty(LEDC_MODE, LEDC_CHANNEL_IN4_1));
+                ESP_ERROR_CHECK(ledc_update_duty(LEDC_MODE, LEDC_CHANNEL_IN1_2));
+                ESP_ERROR_CHECK(ledc_update_duty(LEDC_MODE, LEDC_CHANNEL_IN2_2));
+                ESP_ERROR_CHECK(ledc_update_duty(LEDC_MODE, LEDC_CHANNEL_IN3_2));
+                ESP_ERROR_CHECK(ledc_update_duty(LEDC_MODE, LEDC_CHANNEL_IN4_2));
             }
             break;
 
@@ -191,6 +200,15 @@ static int  ble_svc_gatt_handler(uint16_t conn_handle, uint16_t attr_handle, str
 
             case TRIANGLE_KEY:
                 //MODLOG_DFLT(INFO, "TRIANGLE_KEY");
+                //increase speed by 25%
+                if(LEDC_DUTY < (4*2048))
+                {
+                    LEDC_DUTY = LEDC_DUTY + 2048;
+                }
+                else
+                {
+                    /* do nothing */
+                }
                 break;
 
             case CIRCLE_KEY:
@@ -199,6 +217,15 @@ static int  ble_svc_gatt_handler(uint16_t conn_handle, uint16_t attr_handle, str
 
             case CROSS_KEY:
                 //MODLOG_DFLT(INFO, "CROSS_KEY");
+                //decrease speed by 25%
+                if(LEDC_DUTY > (2048))
+                {
+                    LEDC_DUTY = LEDC_DUTY - 2048;
+                }
+                else
+                {
+                    /* do nothing */
+                }
                 break;    
 
             case SQUARE_KEY:
