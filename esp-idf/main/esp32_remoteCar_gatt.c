@@ -6,7 +6,7 @@
 #include "esp32_remoteCar_inf.h"
 #include "esp32_remoteCar_priv.h"
 
-uint32_t LEDC_DUTY = 2048; // Set duty to 25%. (2 ** 13) * 50% = 4096, 25%=2048
+static uint32_t LEDC_DUTY; // Set duty to 25%. (2 ** 13) * 50% = 4096, 25%=2048
 static uint8_t gatt_svr_static_val[50];
 
 #define PI 3.14159

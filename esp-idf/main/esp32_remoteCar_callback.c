@@ -176,10 +176,6 @@ void log_stack_enableLogsRelatedVsCmd(bool en)
 {
     ESP_UNUSED(en);
 }
-void hci_stack_enableSetVsEvtMaskVsCmd(bool en)
-{
-    ESP_UNUSED(en);
-}
 void winWiden_stack_enableSetConstPeerScaVsCmd(bool en)
 {
     ESP_UNUSED(en);
@@ -189,20 +185,11 @@ void adv_stack_enableScanReqRxdVsEvent(bool en)
 {
     ESP_UNUSED(en);
 }
-void conn_stack_enableChanMapUpdCompVsEvent(bool en)
-{
-    ESP_UNUSED(en);
-}
 
 int base_stack_initEnv(void){return 1;}
-int conn_stack_initEnv(void){return 1;}
 
-void conn_stack_deinitEnv(void){};
 void base_stack_deinitEnv(void){};
 
 int base_stack_enable(void){return 1;}
-int conn_stack_enable(void){return 1;}
-void mmgmt_enableRxbufOptFeature(void){};
 
-void conn_stack_disable(void){};
 void base_stack_disable(void){};

@@ -46,23 +46,16 @@ extern void arr_stack_enableMultiConnVsCmd(bool en);
 extern void pcl_stack_enableSetRssiThreshVsCmd(bool en);
 extern void chanSel_stack_enableSetCsaVsCmd(bool en);
 extern void log_stack_enableLogsRelatedVsCmd(bool en);
-extern void hci_stack_enableSetVsEvtMaskVsCmd(bool en);
 extern void winWiden_stack_enableSetConstPeerScaVsCmd(bool en);
 
 extern void adv_stack_enableScanReqRxdVsEvent(bool en);
-extern void conn_stack_enableChanMapUpdCompVsEvent(bool en);
 
 extern int base_stack_initEnv(void);
-extern int conn_stack_initEnv(void);
 
-extern void conn_stack_deinitEnv(void);
 extern void base_stack_deinitEnv(void);
 
 extern int base_stack_enable(void);
-extern int conn_stack_enable(void);
-extern void mmgmt_enableRxbufOptFeature(void);
 
-extern void conn_stack_disable(void);
 extern void base_stack_disable(void);
 
 #endif /* ESP32_REMOTECAR_INF_H */
