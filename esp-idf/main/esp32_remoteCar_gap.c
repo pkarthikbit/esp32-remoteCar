@@ -6,6 +6,7 @@
 #include "esp32_remoteCar_inf.h"
 #include "esp32_remoteCar_priv.h"
 
+static const char *tag = "SUGANTH_REMOTECAR_GAP";
 /**
  * Logs information about a connection to the console.
  */
@@ -54,7 +55,7 @@ int ble_spp_server_gap_event(struct ble_gap_event *event, void *arg)
     int rc;
 
     switch (event->type) {
-    case BLE_GAP_EVENT_LINK_ESTAB:
+    case BLE_GAP_EVENT_CONNECT:
         /* A new connection was established or a connection attempt failed. */
         MODLOG_DFLT(INFO, "connection %s; status=%d ",
                     event->connect.status == 0 ? "established" : "failed",
@@ -65,27 +66,23 @@ int ble_spp_server_gap_event(struct ble_gap_event *event, void *arg)
             ble_spp_server_print_conn_desc(&desc);
         }
         MODLOG_DFLT(INFO, "\n");
-        if (event->connect.status != 0 || CONFIG_BT_NIMBLE_MAX_CONNECTIONS > 1) {
-            /* Connection failed or if multiple connection allowed; resume advertising. */
+
+        if (event->connect.status != 0) {
+            /* Connection failed; resume advertising. */
             ble_spp_server_advertise();
         }
         return 0;
 
-    /* `BLE_GAP_EVENT_DISCONNECT`: This case handles a disconnection event. 
-     * It prints disconnection details and resumes advertising. */
     case BLE_GAP_EVENT_DISCONNECT:
         MODLOG_DFLT(INFO, "disconnect; reason=%d ", event->disconnect.reason);
         ble_spp_server_print_conn_desc(&event->disconnect.conn);
         MODLOG_DFLT(INFO, "\n");
 
-        conn_handle_subs[event->disconnect.conn.conn_handle] = false;
-
         /* Connection terminated; resume advertising. */
         ble_spp_server_advertise();
+
         return 0;
 
-    /* `BLE_GAP_EVENT_CONN_UPDATE`: This case handles a connection parameter update event. 
-     * It prints the updated connection parameters. */
     case BLE_GAP_EVENT_CONN_UPDATE:
         /* The central has updated the connection parameters. */
         MODLOG_DFLT(INFO, "connection updated; status=%d ",
@@ -96,25 +93,31 @@ int ble_spp_server_gap_event(struct ble_gap_event *event, void *arg)
         MODLOG_DFLT(INFO, "\n");
         return 0;
 
-    /* `BLE_GAP_EVENT_ADV_COMPLETE`: This case handles the completion of advertising. 
-     * It resumes advertising when advertising completes. */
     case BLE_GAP_EVENT_ADV_COMPLETE:
         MODLOG_DFLT(INFO, "advertise complete; reason=%d",
                     event->adv_complete.reason);
-        ble_spp_server_advertise();
+                    ble_spp_server_advertise();
         return 0;
 
-    /* `BLE_GAP_EVENT_MTU`: This case is activated when the Maximum Transmission Unit (MTU) is updated for a connection. 
-     * It prints the new MTU value and related information. */
-    case BLE_GAP_EVENT_MTU:
-        MODLOG_DFLT(INFO, "mtu update event; conn_handle=%d cid=%d mtu=%d\n",
-                    event->mtu.conn_handle,
-                    event->mtu.channel_id,
-                    event->mtu.value);
+    case BLE_GAP_EVENT_ENC_CHANGE:
+        /* Encryption has been enabled or disabled for this connection. */
+        MODLOG_DFLT(INFO, "encryption change event; status=%d ",
+                    event->enc_change.status);
+        rc = ble_gap_conn_find(event->enc_change.conn_handle, &desc);
+        assert(rc == 0);
+        ble_spp_server_print_conn_desc(&desc);
+        MODLOG_DFLT(INFO, "\n");
         return 0;
 
-    /* `BLE_GAP_EVENT_SUBSCRIBE`: This case handles a subscription event. 
-     * It prints details about subscription changes. */
+    case BLE_GAP_EVENT_NOTIFY_TX:
+        MODLOG_DFLT(INFO, "notify_tx event; conn_handle=%d attr_handle=%d "
+                    "status=%d is_indication=%d",
+                    event->notify_tx.conn_handle,
+                    event->notify_tx.attr_handle,
+                    event->notify_tx.status,
+                    event->notify_tx.indication);
+        return 0;
+
     case BLE_GAP_EVENT_SUBSCRIBE:
         MODLOG_DFLT(INFO, "subscribe event; conn_handle=%d attr_handle=%d "
                     "reason=%d prevn=%d curn=%d previ=%d curi=%d\n",
@@ -125,10 +128,86 @@ int ble_spp_server_gap_event(struct ble_gap_event *event, void *arg)
                     event->subscribe.cur_notify,
                     event->subscribe.prev_indicate,
                     event->subscribe.cur_indicate);
-        conn_handle_subs[event->subscribe.conn_handle] = true;
         return 0;
 
-    default:
+    case BLE_GAP_EVENT_MTU:
+        MODLOG_DFLT(INFO, "mtu update event; conn_handle=%d cid=%d mtu=%d\n",
+                    event->mtu.conn_handle,
+                    event->mtu.channel_id,
+                    event->mtu.value);
+        return 0;
+
+    case BLE_GAP_EVENT_REPEAT_PAIRING:
+        /* We already have a bond with the peer, but it is attempting to
+         * establish a new secure link.  This app sacrifices security for
+         * convenience: just throw away the old bond and accept the new link.
+         */
+
+        /* Delete the old bond. */
+        rc = ble_gap_conn_find(event->repeat_pairing.conn_handle, &desc);
+        assert(rc == 0);
+        ble_store_util_delete_peer(&desc.peer_id_addr);
+
+        /* Return BLE_GAP_REPEAT_PAIRING_RETRY to indicate that the host should
+         * continue with the pairing operation.
+         */
+        return BLE_GAP_REPEAT_PAIRING_RETRY;
+
+    case BLE_GAP_EVENT_PASSKEY_ACTION:
+        ESP_LOGI(tag, "PASSKEY_ACTION_EVENT started");
+        struct ble_sm_io pkey = {0};
+        int key = 0;
+
+        if (event->passkey.params.action == BLE_SM_IOACT_DISP) {
+            pkey.action = event->passkey.params.action;
+            pkey.passkey = 123456; // This is the passkey to be entered on peer
+            ESP_LOGI(tag, "Enter passkey %" PRIu32 "on the peer side", pkey.passkey);
+            rc = ble_sm_inject_io(event->passkey.conn_handle, &pkey);
+            ESP_LOGI(tag, "ble_sm_inject_io result: %d", rc);
+        } else if (event->passkey.params.action == BLE_SM_IOACT_NUMCMP) {
+            ESP_LOGI(tag, "Passkey on device's display: %" PRIu32 , event->passkey.params.numcmp);
+            ESP_LOGI(tag, "Accept or reject the passkey through console in this format -> key Y or key N");
+            pkey.action = event->passkey.params.action;
+            if (scli_receive_key(&key)) {
+                pkey.numcmp_accept = key;
+            } else {
+                pkey.numcmp_accept = 0;
+                ESP_LOGE(tag, "Timeout! Rejecting the key");
+            }
+            rc = ble_sm_inject_io(event->passkey.conn_handle, &pkey);
+            ESP_LOGI(tag, "ble_sm_inject_io result: %d", rc);
+        } else if (event->passkey.params.action == BLE_SM_IOACT_OOB) {
+            static uint8_t tem_oob[16] = {0};
+            pkey.action = event->passkey.params.action;
+            for (int i = 0; i < 16; i++) {
+                pkey.oob[i] = tem_oob[i];
+            }
+            rc = ble_sm_inject_io(event->passkey.conn_handle, &pkey);
+            ESP_LOGI(tag, "ble_sm_inject_io result: %d", rc);
+        } else if (event->passkey.params.action == BLE_SM_IOACT_INPUT) {
+            ESP_LOGI(tag, "Enter the passkey through console in this format-> key 123456");
+            pkey.action = event->passkey.params.action;
+            if (scli_receive_key(&key)) {
+                pkey.passkey = key;
+            } else {
+                pkey.passkey = 0;
+                ESP_LOGE(tag, "Timeout! Passing 0 as the key");
+            }
+            rc = ble_sm_inject_io(event->passkey.conn_handle, &pkey);
+            ESP_LOGI(tag, "ble_sm_inject_io result: %d", rc);
+        }
+        return 0;
+
+    case BLE_GAP_EVENT_AUTHORIZE:
+        MODLOG_DFLT(INFO, "authorize event: conn_handle=%d attr_handle=%d is_read=%d",
+                    event->authorize.conn_handle,
+                    event->authorize.attr_handle,
+                    event->authorize.is_read);
+
+        /* The default behaviour for the event is to reject authorize request */
+        event->authorize.out_response = BLE_GAP_AUTHORIZE_REJECT;
         return 0;
     }
+
+    return 0;
 }

@@ -35,6 +35,7 @@
 /* Defines the macros for device name, and device appearance and declares the function to set them. */
 #include "services/gap/ble_svc_gap.h"
 #include "services/gatt/ble_svc_gatt.h"
+#include "services/ans/ble_svc_ans.h"
 
 /* Public inclusion */
 #include "esp32_remoteCar_pub.h"

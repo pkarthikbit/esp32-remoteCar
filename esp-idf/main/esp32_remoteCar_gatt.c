@@ -30,12 +30,35 @@ static uint8_t gatt_svr_static_val[50];
 #define RIGHT_KEY       0x8
 
 /**
+ * Init function
+ */
+int gatt_svr_init(void)
+{
+    int rc;
+
+    ble_svc_gap_init();
+    ble_svc_gatt_init();
+    ble_svc_ans_init();
+
+    rc = ble_gatts_count_cfg(new_ble_svc_gatt_defs);
+    if (rc != 0) {
+        return rc;
+    }
+
+    rc = ble_gatts_add_svcs(new_ble_svc_gatt_defs);
+    if (rc != 0) {
+        return rc;
+    }
+
+    return 0;
+}
+
+/**
  * Utility function to log an array of bytes.
  */
 static int
-gatt_svr_chr_write(uint16_t conn_handle, uint16_t attr_handle,
-                   struct os_mbuf *om, uint16_t min_len, uint16_t max_len,
-                   void *dst, uint16_t *len)
+gatt_svr_chr_write(struct os_mbuf *om, uint16_t min_len, uint16_t max_len,
+    void *dst, uint16_t *len)
 {
     uint16_t om_len;
     int rc;
@@ -73,8 +96,7 @@ static int  ble_svc_gatt_handler(uint16_t conn_handle, uint16_t attr_handle, str
 
     if (ctxt->op == BLE_GATT_ACCESS_OP_WRITE_CHR) 
     {
-        rc = gatt_svr_chr_write(conn_handle, attr_handle,
-                                ctxt->om, 0,
+        rc = gatt_svr_chr_write(ctxt->om, 0,
                                 sizeof gatt_svr_static_val,
                                 &gatt_svr_static_val, &act_len);
         
