@@ -10,6 +10,8 @@
 └── kpl_flash.sh        => shell file to flash the controller ESP32-C6
 └── kpl_monitor.sh      => shell file to monitor the printf. To exit the serial monitor, type ``Ctrl-]``.
 ```
+Updated from:
+/home/priyanka/esp-idf/examples/bluetooth/nimble/bleprph
 
 # esp32-remoteCar
 
