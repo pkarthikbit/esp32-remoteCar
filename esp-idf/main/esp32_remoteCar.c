@@ -99,21 +99,6 @@ BLE_UUID128_INIT(0x9E, 0xCA, 0xDC, 0x24, 0x0E, 0xE5, 0xA9, 0xE0,
                                     (1ULL<<GPIO_DRV8833_IN4_2)  \
                             )
 
-/******************* LEDC ********************/
-#define LEDC_TIMER              LEDC_TIMER_0
-#define LEDC_MODE               LEDC_LOW_SPEED_MODE
-#define LEDC_DUTY_RES           LEDC_TIMER_13_BIT // Set duty resolution to 13 bits
-#define LEDC_FREQUENCY          (4000) // Frequency in Hertz. Set frequency at 4 kHz
-
-#define LEDC_CHANNEL_IN1_1  LEDC_CHANNEL_0 /*!< LEDC channel 0 */
-#define LEDC_CHANNEL_IN2_1  LEDC_CHANNEL_1    /*!< LEDC channel 1 */
-#define LEDC_CHANNEL_IN3_1  LEDC_CHANNEL_2     /*!< LEDC channel 2 */
-#define LEDC_CHANNEL_IN4_1  LEDC_CHANNEL_3     /*!< LEDC channel 3 */
-#define LEDC_CHANNEL_IN1_2  LEDC_CHANNEL_4     /*!< LEDC channel 4 */
-#define LEDC_CHANNEL_IN2_2  LEDC_CHANNEL_5     /*!< LEDC channel 5 */
-#define LEDC_CHANNEL_IN3_2  LEDC_CHANNEL_6     /*!< LEDC channel 6 */
-#define LEDC_CHANNEL_IN4_2  LEDC_CHANNEL_7     /*!< LEDC channel 7 */
-
 /* Variable definition */
 static uint8_t gatt_svr_static_val[50];
 uint16_t ble_spp_svc_gatt_receive_val_handle;
