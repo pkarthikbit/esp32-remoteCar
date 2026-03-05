@@ -249,7 +249,7 @@ bleprph_gap_event(struct ble_gap_event *event, void *arg)
             upd.itvl_min = 6;
             upd.itvl_max = 6;
             upd.latency  = 0;
-            upd.timeout  = 400; /* 4 s supervision timeout */
+            upd.supervision_timeout = 400; /* 4 s supervision timeout */
             rc = ble_gap_update_params(event->connect.conn_handle, &upd);
             if (rc != 0) {
                 MODLOG_DFLT(WARN, "conn_update failed; rc=%d\n", rc);
