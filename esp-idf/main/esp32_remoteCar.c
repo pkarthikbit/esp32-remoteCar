@@ -99,108 +99,10 @@ BLE_UUID128_INIT(0x9E, 0xCA, 0xDC, 0x24, 0x0E, 0xE5, 0xA9, 0xE0,
                                     (1ULL<<GPIO_DRV8833_IN4_2)  \
                             )
 
-/******************* LEDC PWM Configuration ********************/
-#define LEDC_TIMER              LEDC_TIMER_0
-#define LEDC_MODE               LEDC_LOW_SPEED_MODE
-#define LEDC_CHANNEL_MOTOR1     LEDC_CHANNEL_0
-#define LEDC_CHANNEL_MOTOR2     LEDC_CHANNEL_1
-#define LEDC_DUTY_RES           LEDC_TIMER_10_BIT    /* 10-bit = 0-1023 */
-#define LEDC_FREQUENCY          5000                  /* 5 kHz PWM frequency */
-#define LEDC_SPEED_MAX          1023                  /* Max duty cycle for 10-bit */
-#define SPEED_STEP              51                    /* 255 / 5 steps for speed adjustment */
-
 /* Variable definition */
-static uint8_t motor_speed = 127;  /* Current motor speed 0-255 */
 static uint8_t gatt_svr_static_val[50];
 uint16_t ble_spp_svc_gatt_receive_val_handle;
 uint16_t ble_spp_svc_gatt_transmit_val_handle;
-
-/******************* Motor Control Helper Functions ********************/
-static void ledc_init(void)
-{
-    ledc_timer_config_t ledc_timer = {
-        .speed_mode       = LEDC_MODE,
-        .timer_num        = LEDC_TIMER,
-        .duty_resolution  = LEDC_DUTY_RES,
-        .freq_hz          = LEDC_FREQUENCY,
-        .clk_cfg          = LEDC_AUTO_CLK
-    };
-    ledc_timer_config(&ledc_timer);
-
-    ledc_channel_config_t ledc_channel = {
-        .speed_mode     = LEDC_MODE,
-        .channel        = LEDC_CHANNEL_MOTOR1,
-        .timer_sel      = LEDC_TIMER,
-        .intr_type      = LEDC_INTR_DISABLE,
-        .gpio_num       = GPIO_DRV8833_IN1_1,
-        .duty           = 0,
-        .hpoint         = 0,
-    };
-    ledc_channel_config(&ledc_channel);
-
-    ledc_channel.channel = LEDC_CHANNEL_MOTOR2;
-    ledc_channel.gpio_num = GPIO_DRV8833_IN1_2;
-    ledc_channel_config(&ledc_channel);
-}
-
-static void motor_set_pwm(uint8_t speed)
-{
-    uint16_t duty = (uint16_t)(speed * LEDC_SPEED_MAX / 255);
-    ledc_set_duty(LEDC_MODE, LEDC_CHANNEL_MOTOR1, duty);
-    ledc_update_duty(LEDC_MODE, LEDC_CHANNEL_MOTOR1);
-    ledc_set_duty(LEDC_MODE, LEDC_CHANNEL_MOTOR2, duty);
-    ledc_update_duty(LEDC_MODE, LEDC_CHANNEL_MOTOR2);
-}
-
-static void motor_forward(uint8_t speed)
-{
-    gpio_set_level(GPIO_DRV8833_IN2_1, false);
-    gpio_set_level(GPIO_DRV8833_IN3_1, false);
-    gpio_set_level(GPIO_DRV8833_IN4_1, true);
-    gpio_set_level(GPIO_DRV8833_IN1_2, false);
-    gpio_set_level(GPIO_DRV8833_IN2_2, true);
-    gpio_set_level(GPIO_DRV8833_IN3_2, false);
-    motor_set_pwm(speed);
-}
-
-static void motor_reverse(uint8_t speed)
-{
-    gpio_set_level(GPIO_DRV8833_IN2_1, true);
-    gpio_set_level(GPIO_DRV8833_IN3_1, true);
-    gpio_set_level(GPIO_DRV8833_IN4_1, false);
-    gpio_set_level(GPIO_DRV8833_IN1_2, true);
-    gpio_set_level(GPIO_DRV8833_IN2_2, false);
-    gpio_set_level(GPIO_DRV8833_IN3_2, true);
-    motor_set_pwm(speed);
-}
-
-static void motor_left(uint8_t speed)
-{
-    gpio_set_level(GPIO_DRV8833_IN2_1, false);
-    gpio_set_level(GPIO_DRV8833_IN3_1, false);
-    gpio_set_level(GPIO_DRV8833_IN4_1, true);
-    gpio_set_level(GPIO_DRV8833_IN1_2, false);
-    gpio_set_level(GPIO_DRV8833_IN2_2, false);
-    gpio_set_level(GPIO_DRV8833_IN3_2, false);
-    gpio_set_level(GPIO_DRV8833_IN4_2, true);
-    motor_set_pwm(speed);
-}
-
-static void motor_right(uint8_t speed)
-{
-    gpio_set_level(GPIO_DRV8833_IN2_1, false);
-    gpio_set_level(GPIO_DRV8833_IN3_1, false);
-    gpio_set_level(GPIO_DRV8833_IN1_2, false);
-    gpio_set_level(GPIO_DRV8833_IN2_2, true);
-    gpio_set_level(GPIO_DRV8833_IN3_2, false);
-    gpio_set_level(GPIO_DRV8833_IN4_2, false);
-    motor_set_pwm(speed);
-}
-
-static void motor_stop(void)
-{
-    motor_set_pwm(0);
-}
 
 /******************* Variable declaration/ definition ********************/
 /* Ref @ https://github.com/espressif/esp-idf/issues/9798 
@@ -252,23 +154,67 @@ int  esp32_remoteCar_gatt_handler(uint16_t conn_handle, uint16_t attr_handle, st
                     */
                     
                     case UP_KEY:
-                        motor_forward(motor_speed);
+                        //MODLOG_DFLT(INFO, "UP_KEY");
+                        gpio_set_level(GPIO_DRV8833_IN1_1, true);
+                        gpio_set_level(GPIO_DRV8833_IN2_1, false);
+                        gpio_set_level(GPIO_DRV8833_IN3_1, false);
+                        gpio_set_level(GPIO_DRV8833_IN4_1, true);
+
+                        gpio_set_level(GPIO_DRV8833_IN1_2, false);
+                        gpio_set_level(GPIO_DRV8833_IN2_2, true);
+                        gpio_set_level(GPIO_DRV8833_IN3_2, false);
+                        gpio_set_level(GPIO_DRV8833_IN4_2, true);
                         break;
 
                     case DOWN_KEY:
-                        motor_reverse(motor_speed);
+                        //MODLOG_DFLT(INFO, "DOWN_KEY");
+                        gpio_set_level(GPIO_DRV8833_IN1_1, false);
+                        gpio_set_level(GPIO_DRV8833_IN2_1, true);
+                        gpio_set_level(GPIO_DRV8833_IN3_1, true);
+                        gpio_set_level(GPIO_DRV8833_IN4_1, false);
+
+                        gpio_set_level(GPIO_DRV8833_IN1_2, true);
+                        gpio_set_level(GPIO_DRV8833_IN2_2, false);
+                        gpio_set_level(GPIO_DRV8833_IN3_2, true);
+                        gpio_set_level(GPIO_DRV8833_IN4_2, false);
                         break;
 
                     case LEFT_KEY:
-                        motor_left(motor_speed);
+                        //MODLOG_DFLT(INFO, "LEFT_KEY");
+                        gpio_set_level(GPIO_DRV8833_IN1_1, false);
+                        gpio_set_level(GPIO_DRV8833_IN2_1, false);
+                        gpio_set_level(GPIO_DRV8833_IN3_1, false);
+                        gpio_set_level(GPIO_DRV8833_IN4_1, true);
+
+                        gpio_set_level(GPIO_DRV8833_IN1_2, false);
+                        gpio_set_level(GPIO_DRV8833_IN2_2, false);
+                        gpio_set_level(GPIO_DRV8833_IN3_2, false);
+                        gpio_set_level(GPIO_DRV8833_IN4_2, true);
                         break;
 
                     case RIGHT_KEY:
-                        motor_right(motor_speed);
+                        //MODLOG_DFLT(INFO, "RIGHT_KEY");
+                        gpio_set_level(GPIO_DRV8833_IN1_1, true);
+                        gpio_set_level(GPIO_DRV8833_IN2_1, false);
+                        gpio_set_level(GPIO_DRV8833_IN3_1, false);
+                        gpio_set_level(GPIO_DRV8833_IN4_1, false);
+
+                        gpio_set_level(GPIO_DRV8833_IN1_2, false);
+                        gpio_set_level(GPIO_DRV8833_IN2_2, true);
+                        gpio_set_level(GPIO_DRV8833_IN3_2, false);
+                        gpio_set_level(GPIO_DRV8833_IN4_2, false);
                         break;
 
                     default:
-                        motor_stop();
+                        gpio_set_level(GPIO_DRV8833_IN1_1, false);
+                        gpio_set_level(GPIO_DRV8833_IN2_1, false);
+                        gpio_set_level(GPIO_DRV8833_IN3_1, false);
+                        gpio_set_level(GPIO_DRV8833_IN4_1, false);
+
+                        gpio_set_level(GPIO_DRV8833_IN1_2, false);
+                        gpio_set_level(GPIO_DRV8833_IN2_2, false);
+                        gpio_set_level(GPIO_DRV8833_IN3_2, false);
+                        gpio_set_level(GPIO_DRV8833_IN4_2, false);
                         break;
                 }
             }
@@ -297,32 +243,28 @@ int  esp32_remoteCar_gatt_handler(uint16_t conn_handle, uint16_t attr_handle, st
         switch(gatt_svr_static_val[5])
         {
             case START_KEY:
+                //MODLOG_DFLT(INFO, "START_KEY");
                 break;
 
             case SELECT_KEY:
+                //MODLOG_DFLT(INFO, "SELECT_KEY");
                 break;
 
             case TRIANGLE_KEY:
-                /* Increase speed */
-                if (motor_speed < 255) {
-                    motor_speed = (motor_speed + SPEED_STEP > 255) ? 255 : motor_speed + SPEED_STEP;
-                    ESP_LOGI("MOTOR", "Speed increased to: %d", motor_speed);
-                }
+                //MODLOG_DFLT(INFO, "TRIANGLE_KEY");
                 break;
 
             case CIRCLE_KEY:
+                //MODLOG_DFLT(INFO, "CIRCLE_KEY");
                 break;
 
             case CROSS_KEY:
-                /* Decrease speed */
-                if (motor_speed > 0) {
-                    motor_speed = (motor_speed < SPEED_STEP) ? 0 : motor_speed - SPEED_STEP;
-                    ESP_LOGI("MOTOR", "Speed decreased to: %d", motor_speed);
-                }
-                break;
+                //MODLOG_DFLT(INFO, "CROSS_KEY");
+                break;    
 
             case SQUARE_KEY:
-                break;
+                //MODLOG_DFLT(INFO, "SQUARE_KEY");
+                break;  
 
             default:
                 break;      
@@ -398,7 +340,4 @@ void gpio_init()
     io_conf.pull_up_en = 0;
     // configure GPIO with the given settings
     gpio_config(&io_conf);
-    
-    /* Initialize PWM for speed control */
-    ledc_init();
 }
