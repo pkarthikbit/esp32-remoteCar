@@ -237,10 +237,23 @@ bleprph_gap_event(struct ble_gap_event *event, void *arg)
         MODLOG_DFLT(INFO, "connection %s; status=%d ",
                     event->connect.status == 0 ? "established" : "failed",
                     event->connect.status);
-        if (event->connect.status == 0) {
+  
+        if (event->connect.status == 0) 
+        {
             rc = ble_gap_conn_find(event->connect.conn_handle, &desc);
             assert(rc == 0);
             bleprph_print_conn_desc(&desc);
+
+            /* speed‑up the link: 6 = 7.5 ms */
+            struct ble_gap_upd_params upd;
+            upd.itvl_min = 6;
+            upd.itvl_max = 6;
+            upd.latency  = 0;
+            upd.timeout  = 400; /* 4 s supervision timeout */
+            rc = ble_gap_update_params(event->connect.conn_handle, &upd);
+            if (rc != 0) {
+                MODLOG_DFLT(WARN, "conn_update failed; rc=%d\n", rc);
+            }
         }
         MODLOG_DFLT(INFO, "\n");
 
@@ -485,6 +498,17 @@ ble_app_set_addr(void)
 }
 #endif
 
+/* call once after the host has been synced */
+static void
+ble_app_set_preferred_phys(void)
+{
+    /* request 2 M for TX and RX; 0 = no preference */
+    int rc = ble_gap_set_preferred_phys(own_addr_type,
+                                        BLE_GAP_PHY_PREF_2M,
+                                        BLE_GAP_PHY_PREF_2M);
+    assert(rc == 0);
+}
+
 static void
 bleprph_on_sync(void)
 {
@@ -517,6 +541,10 @@ bleprph_on_sync(void)
     MODLOG_DFLT(INFO, "Device Address: ");
     print_addr(addr_val);
     MODLOG_DFLT(INFO, "\n");
+
+    /* generate address, ensure identity, start advertising… */
+    ble_app_set_preferred_phys();
+
     /* Begin advertising. */
 #if CONFIG_EXAMPLE_EXTENDED_ADV
     ext_bleprph_advertise();
