@@ -498,16 +498,6 @@ ble_app_set_addr(void)
 }
 #endif
 
-/* call once after the host has been synced */
-static void
-ble_app_set_preferred_phys(void)
-{
-    /* request 2 M for TX and RX; 0 = no preference */
-    int rc = ble_gap_set_preferred_phys(own_addr_type,
-                                        BLE_GAP_PHY_PREF_2M,
-                                        BLE_GAP_PHY_PREF_2M);
-    assert(rc == 0);
-}
 
 static void
 bleprph_on_sync(void)
@@ -541,10 +531,6 @@ bleprph_on_sync(void)
     MODLOG_DFLT(INFO, "Device Address: ");
     print_addr(addr_val);
     MODLOG_DFLT(INFO, "\n");
-
-    /* generate address, ensure identity, start advertising… */
-    ble_app_set_preferred_phys();
-
     /* Begin advertising. */
 #if CONFIG_EXAMPLE_EXTENDED_ADV
     ext_bleprph_advertise();
